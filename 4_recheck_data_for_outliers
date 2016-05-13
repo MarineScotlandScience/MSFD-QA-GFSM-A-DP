@@ -1,0 +1,668 @@
+###################
+# Version Control #
+###################
+# R version 3.2.2 (2015-08-14): Fire Safety 
+# platform       x86_64-w64-mingw32 (64-bit)
+###############
+# Script Info #
+###############
+# This is Script 4 of X 
+# The purpose of this script is to check the merged datasets and insure all changes  
+# mentioned in the error trapping documentation are transfered into the data product
+#
+# AUTHOR: Meadhbh Moriarty, 2016
+# REVIEWED BY: 
+
+#################################################
+## Add in the Corrections sent directly to me ###
+#################################################
+#############################
+# Northern Ireland Additions#
+#############################
+
+# The First step in the correction procedure is to add in any missing data
+# these are the datasets that were stored loaded up during script 2_Loading_data
+
+# Correction 1: Northern Ireland Data 1992 - 2007
+# this data is not currently available on DATRAS
+head(NI_extra)
+# change -9 to NA
+
+# First split HH and HL
+NI_HH<-subset(NI_extra, V1=="HH",
+)
+NI_HL<-subset(NI_extra, V1=="HL", 
+)
+
+# Sort out the Col headings
+names(NI_HH)<-c("RecordType", "Quarter", "Country" , "Ship" , "Gear" , 
+         "SweepLngt", "GearExp", "DoorType", "StNo" , "HaulNo" , 
+         "Year", "month", "Day", "TimeShot", "Stratum" ,"HaulDur",
+         "DayNight", "ShootLat", "ShootLong","HaulLat", "HaulLong",
+         "StatRec", "Depth","HaulVal","HydroStNo","StdSpecRecCode",
+         "BycSpecRecCode","DataType", "Netopening","Rigging","Tickler",
+         "Distance","Warplngt","Warpdia","WarpDen","DoorSurface","DoorWgt",
+         "DoorSpread","WingSpread","Buoyancy","KiteDim","WgtGroundRope","TowDir",
+         "GroundSpeed","SpeedWater","SurCurDir","SurCurSpeed","BotCurDir",
+         "BotCurSpeed","WindDir","WindSpeed","SwellDir","SwellHeight","SurTemp",
+         "BotTemp","SurSal","BotSal","ThermoCline", "ThClineDepth")
+
+NI_HH$Survey<-"NIGFS"
+NI_HH$DateofCalculation<-"NA"
+names(NI_HH)
+
+summary(NI_HH)
+# Haul Durations recorded as decimal hour - change to mins (*60)
+NI_HH$HaulDur<-NI_HH$HaulDur*60
+
+# Now look at HL file
+summary(NI_HL)
+names(HL_rot)
+names(NI_HL)<-c("RecordType", "Quarter","Country",          
+                    "Ship", "Gear","SweepLngt", "GearExp",         
+                    "DoorType", "StNo","HaulNo","Year",        
+                    "SpecCodeType","SpecCode","SpecVal","Sex",              
+                    "TotalNo", "CatIdentifier" ,"NoMeas", "SubFactor",        
+                    "SubWgt","CatCatchWgt", "LngtCode","LngtClass" ,       
+                    "HLNoAtLngt")
+keepers<-c("RecordType", "Quarter","Country",          
+                "Ship", "Gear","SweepLngt", "GearExp",         
+                "DoorType", "StNo","HaulNo","Year",        
+                "SpecCodeType","SpecCode","SpecVal","Sex",              
+                "TotalNo", "CatIdentifier" ,"NoMeas", "SubFactor",        
+                "SubWgt","CatCatchWgt", "LngtCode","LngtClass" ,       
+                "HLNoAtLngt")
+NI_HL<-NI_HL[keepers]
+NI_HL$Survey<-"NIGFS"
+NI_HL$DateofCalculation<-"NA"
+NI_HL$Valid_Aphia<-NI_HL$SpecCode 
+
+# Add unique ID code
+NI_HH$UniqueID<-paste(NI_HH$Survey, NI_HH$Year,NI_HH$Quarter, 
+                          NI_HH$Ship, NI_HH$HaulNo, NI_HH$Gear, sep="/")
+NI_HL$UniqueID<-paste(NI_HL$Survey, NI_HL$Year, NI_HL$Quarter, 
+                      NI_HL$Ship, NI_HL$HaulNo, NI_HL$Gear, sep="/")
+
+# these data will be added to the product
+
+HH_rot1<-rbind(HH_rot, NI_HH,  fill=TRUE)
+HL_rot1<-rbind(HL_rot,NI_HL, fill=TRUE)
+names(HL_rot1)
+# remove intermediate datasets
+rm(NI_extra, NI_HH, NI_HL, keepers)
+rm(NI_Add_HH)
+############################
+## French IBTS Corrections##
+############################
+
+# France Data Provider have sent data directly to me for all Years 
+# No corrections uploaded all national data for Q 1 submitted directly to me
+# first check that the number of hauls are the same
+summary(as.factor(HH_gov$Survey))
+#NS-IBTS has 30394 records
+french_ibts<-subset(HH_gov, Survey=="NS-IBTS"& Country=="FRA" & Quarter==1
+                    & Year<2016,
+)
+system.time(replace_function(FRA_HH_corrections))
+# 2516 obs belong to France in this dataset from 1978 onwards
+# the corrected data directly from france contains 2449 obs
+# no 2016 data in corrections - submitted before these are available
+# without the 2016 obs the french data matches
+summary(french_ibts)
+summary(FRA_HH_corrections)
+FRA_HH_corrections$UniqueID<-paste(FRA_HH_corrections$Survey,
+                                        FRA_HH_corrections$Year,
+                                        FRA_HH_corrections$Quarter, 
+                                        FRA_HH_corrections$Ship, 
+                                        FRA_HH_corrections$HaulNo, 
+                                        FRA_HH_corrections$Gear, sep="/")
+# Need to compare two datasets to understand changes made by France
+
+compare_function <- function(x.1,x.2,...){
+  x.1p <- do.call("paste", x.1)
+  x.2p <- do.call("paste", x.2)
+  x.1[! x.1p %in% x.2p, ]
+}
+compare_function(french_ibts,FRA_HH_corrections)
+compare_function(FRA_HH_corrections, french_ibts)
+# all different- look at date of cal
+french_ibts$DateofCalculation<-NA
+FRA_HH_corrections$DateofCalculation<-NA
+# Still large chunk different
+# Distances recalculated using haversine
+# Use DATRAS distances and correct the ones that are really bad like everyone else
+french_ibts$Distance<-NA
+FRA_HH_corrections$Distance<-NA
+test<- fun.12(french_ibts, FRA_HH_corrections)
+test1 <-fun.12(FRA_HH_corrections, french_ibts)
+# One difference left - real correction
+# NS-IBTS/1995/1/THA/29/GOV
+# wingspread should be 16 not 50
+# fix wingspread in HH_gov
+HH_gov$WingSpread[HH_gov$UniqueID=="NS-IBTS/1995/1/THA/29/GOV"]<-16
+# remove all the intermediate datasets not needed
+rm(french_ibts, FRA_HH_corrections, FRA_HL_corrections1,FRA_HL_Corrections2, test, test1)
+
+######################################
+## DENMARK IBTS CORRECTIONs/Additions#
+######################################
+
+# The third addition came from Denmark for the earlier IBTS 
+# data for 1983, 1984, 1995, 1986
+NS_DEN<-rbind(NS_DEN_sp_1986,NS_DEN_sp_1985,
+              NS_DEN_sp_1984,NS_DEN_sp_1983, fill=TRUE)
+
+NS_DEN_add_HH<-subset(NS_DEN, V1=="HH",
+)
+NS_DEN_add_HL<-subset(NS_DEN, V1=="HL", 
+)
+
+summary(NS_DEN_add_HL)
+# remove the intermediate datasets
+rm(NS_DEN_sp_1983, NS_DEN_sp_1984, NS_DEN_sp_1985, NS_DEN_sp_1986)
+# Sort out the Col headings
+names(NS_DEN_add_HH)<-c("RecordType", "Quarter", "Country" , "Ship" , "Gear" , 
+                        "SweepLngt", "GearExp",  "DoorType", "StNo" , "HaulNo" , "Year",
+                        "month"    ,         "Day"           ,    "TimeShot"     ,     "Stratum"          ,
+                        "HaulDur"   ,        "DayNight"      ,    "ShootLat"      ,    "ShootLong"        ,
+                        "HaulLat"    ,       "HaulLong"      ,    "StatRec"        ,   "Depth"            ,
+                        "HaulVal"     ,      "HydroStNo"     ,    "StdSpecRecCode" ,   "BycSpecRecCode"   ,
+                        "DataType"     ,     "Netopening"    ,    "Rigging"         ,  "Tickler"          ,
+                        "Distance"      ,    "Warplngt"      ,    "Warpdia"        ,   "WarpDen"          ,
+                        "DoorSurface"    ,   "DoorWgt"       ,    "DoorSpread"     ,   "WingSpread"       ,
+                        "Buoyancy"        ,  "KiteDim"       ,    "WgtGroundRope"  ,   "TowDir"           ,
+                        "GroundSpeed"      , "SpeedWater"    ,    "SurCurDir"      ,   "SurCurSpeed"      ,
+                        "BotCurDir"         ,"BotCurSpeed"     ,  "WindDir"        ,   "WindSpeed"        ,
+                        "SwellDir" ,         "SwellHeight"    ,   "SurTemp"        ,   "BotTemp"          ,
+                        "SurSal"    ,        "BotSal"        ,    "ThermoCline"    ,   "ThClineDepth"     )
+
+NS_DEN_add_HH$Survey<-"NS-IBTS"
+NS_DEN_add_HH$DateofCalculation<-"NA"
+names(NS_DEN_add_HH)
+names(HL_gov)
+names(NS_DEN_add_HL)<-c("RecordType", "Quarter","Country",          
+                        "Ship", "Gear","SweepLngt", "GearExp",         
+                        "DoorType", "StNo","HaulNo","Year",        
+                        "SpecCodeType","SpecCode","SpecVal","Sex",              
+                        "TotalNo", "CatIdentifier" ,"NoMeas", "SubFactor",        
+                        "SubWgt","CatCatchWgt", "LngtCode","LngtClass" ,       
+                        "HLNoAtLngt","x1", "x1", "x1", "x1", "x1", "x1", 
+                        "x1", "x1","x1", "x1", "x1", "x1","x1", "x1", "x1", "x1","x1", "x1",
+                        "x1", "x1","x1", "x1", "x1", "x1","x1", "x1", "x1", "x1","x1", "x1", 
+                        "x1", "x1", "x1", "x1", "x1", "x1")
+NS_DEN_add_HL$Survey<-"NS-IBTS"
+NS_DEN_add_HL$DateofCalculation<- "NA"
+NS_DEN_add_HL$Valid_Aphia<- NS_DEN_add_HL$SpecCode 
+NS_DEN_add_HL$x1<-NULL
+# Add unique ID code
+NS_DEN_add_HH$UniqueID<-paste(NS_DEN_add_HH$Survey,
+                              NS_DEN_add_HH$Year,NS_DEN_add_HH$Quarter, 
+                              NS_DEN_add_HH$Ship, NS_DEN_add_HH$StNo, 
+                              NS_DEN_add_HH$Gear, sep="/")
+NS_DEN_add_HL$UniqueID<-paste(NS_DEN_add_HL$Survey,
+                              NS_DEN_add_HL$Year,NS_DEN_add_HL$Quarter, 
+                              NS_DEN_add_HL$Ship, NS_DEN_add_HL$StNo, 
+                              NS_DEN_add_HL$Gear, sep="/")
+
+Den_ibts<-subset(HH_gov, Survey=="NS-IBTS"&Country=="DEN"&Year<1987&Year>1982,)
+# 168 observations
+# NS_Den_add_HH has only got 168 obs
+remove<-Den_ibts$UniqueID
+# lets check if they are different
+replace_function(NS_DEN_add_HH)
+test<-compare_function(Den_ibts, NS_DEN_add_HH)
+test1<-compare_function(NS_DEN_add_HH, Den_ibts)
+# in the file directly from Denmark there are problems with the distance and
+# and lat long measurements so stick with the DATRAS version of the haul Chron File
+# lets look at the HL file too
+Den_ibts_fish<-subset(HL_gov, UniqueID%in%remove,)
+# 12356 obs in Datras file
+# 13822 obs in denmarks file
+# lest see haw they differ
+replace_function(NS_DEN_add_HL)
+names(NS_DEN_add_HL)
+test<-compare_function(Den_ibts_fish, NS_DEN_add_HL)
+test1<-compare_function(NS_DEN_add_HL, Den_ibts_fish)
+# clear differences in SpecCodeType, SpecCOde, SubWght, LenghtCode/class
+# remove these to see if the spp list of additiona spp shines through
+
+copy_gov<-subset(Den_ibts_fish,
+                 select=c(StNo,  Year, UniqueID))
+copy_den<-subset(NS_DEN_add_HL,
+                 select=c(StNo, Year, UniqueID))
+test<-compare_function(copy_den, copy_gov)
+test1<-compare_function(copy_gov, copy_den)
+# nightmare data should only have extra data in the test, not the test1,
+# all stations and unique ID StNo relapces Haul No in the DEN_add 
+# datasets. They are the same execpt for Unique ID NS-IBTS/1986/1/DAN2/30/GOV which 
+# is only in the DATRAS copy not the Denmark copy 
+# neither copy is perfect - retain DATRAS
+# then find the records of species that are missing from DATRAS 
+copy_gov<-subset(Den_ibts_fish,
+                 select=c(StNo,  Year, UniqueID, Valid_Aphia))
+copy_den<-subset(NS_DEN_add_HL,
+                 select=c(StNo, Year, UniqueID, Valid_Aphia))
+test<-compare_function(copy_den, copy_gov)
+test1<-compare_function(copy_gov, copy_den)
+# 637 records in denmark not in DATRAS - this makes sense
+# 198 records in DATRAS not in denmark!?!
+# complete mis-match
+summary(as.factor(test$Year))
+summary(as.factor(test1$Year))
+summary(as.factor(test$Valid_Aphia))
+# 56 spp missing from records
+summary(as.factor(test1$Valid_Aphia))
+# 14 spp mismatched
+# total mess!
+# Gonna add in the missing records in the Denmark files and flag them
+test$match<-paste(test$UniqueID,test$Valid_Aphia, sep="/")
+NS_DEN_add_HL$match<-paste(NS_DEN_add_HL$UniqueID,NS_DEN_add_HL$Valid_Aphia, sep="/")
+list<-test$match
+Den_HL_additions<-subset(NS_DEN_add_HL, match%in%list, )
+# these are my additions for the HL-gov file
+# leave the match field as a flag for now - issues with these data that 
+# remain unresolved
+HL_gov1<-rbind(HL_gov, Den_HL_additions, fill=TRUE)
+
+#remove intermediate datasets
+rm(Den_HL_additions, Den_ibts,Den_ibts_fish, test, copy_den, copy_gov)
+rm(test1, remove, temp, list, list1)
+rm(NS_DEN, NS_DEN_add_HL, NS_DEN_add_HH)
+
+
+#####################################
+## Appendix Error Trapping Q and A #
+#####################################
+# To check that each error/question raised is addressed, everything listed in the
+# Appendix must be rechecked and verified as corrected at source(already on DATRAS)
+# or alternatively fixed here with a line of code
+
+
+#########################################################################
+# 1.1.1	The First Quarter International Bottom Trawl Survey (GNSIntOT1) #
+#########################################################################
+
+#########################
+### NORWAY NS-IBTS Q1 ###
+#########################
+summary(as.factor(HH_gov$Country))
+
+# remove country DUM
+# Not standard survey
+HH_gov<-HH_gov[Country!="DUM"]
+
+# Question 1: 179m doorspread at depth of 73m. 
+# Is it a true value or a mistake?
+# JD: Most likely was the sensors reading incorrectly. 
+# Value checked with trawl readings, was NA (bad recording). 
+# Should be replaced using this formula: 
+# DS 110m sweeps = 55.7 + 0.56 * depth + -0.001 * depth2
+# MM: I will remove the incorrect value and estimate using mixed model
+# for consistency with other estimated values
+
+
+list<-c("NS-IBTS/2013/1/58G2/22/GOV", "NS-IBTS/2012/3/JHJ/299/GOV")
+HH_gov$DoorSpread[HH_gov$UniqueID%in%list]<-NA
+
+# Question 2; Ship is called â€œ58G2â€ in Q1 â€“ Is this the 
+# correct ship name or should this be GO Stars (GOS)?
+# This is the international ship code for GO Sars.
+# MM change GOS to 58G2
+
+list<-HH_gov$Ship%in%"GOS"
+HH_gov$Shipchanged[HH_gov$Ship%in%"GOS"]<-"GOS changed to 58G2"
+HH_gov$Ship[HH_gov$Ship%in%"GOS"]<-"58G2"
+
+# Station inconsistent with other areas sampled in that year, 
+# is this the correct Latitude and Longitude. 
+# JD: it is possible this was incorrectly recorded and should 
+# be 57.24.00 instead.
+HH_gov$ShootLat[HH_gov$UniqueID=="NS-IBTS/1986/1/ELD/41/GOV"]<-57.24
+
+# 1994/1/GOS/26/GOV Station is inconsistent with sampled area,
+# is this station correct?
+# JD:This haul should be in ICES rectangle 43F7
+check<-HH_gov[HH_gov$UniqueID=="NS-IBTS/1994/1/GOS/26/GOV"]
+check
+# looks to have been changed online.
+
+
+##############################
+# Check: Scotland NS-IBTS Q1 #
+##############################
+# check that uploads have translated onto DATRAS
+sco<-subset(HH_gov, HH_gov$Country=="SCO"&HH_gov$Year==1991&HH_gov$Survey=="NS-IBTS",)
+plot(sco$Depth, sco$DoorSpread, pch=21, col="grey")
+# no change in DATRAS
+# solution from F.B to remove these values from the 
+# existing DATRAS upload and replace with -9 (NA).
+list<-c('NS-IBTS/1991/1/SCO2/38/GOV',	'NS-IBTS/1991/1/SCO2/60/GOV',	
+        'NS-IBTS/1991/1/SCO2/43/GOV', 'NS-IBTS/1991/1/SCO2/36/GOV',	
+        'NS-IBTS/1991/1/SCO2/37/GOV',	'NS-IBTS/1991/1/SCO2/46/GOV',
+        'NS-IBTS/1991/1/SCO2/40/GOV',	'NS-IBTS/1991/1/SCO2/39/GOV',	
+        'NS-IBTS/1991/1/SCO2/42/GOV', 'NS-IBTS/1991/1/SCO2/45/GOV',	
+        'NS-IBTS/1991/1/SCO2/41/GOV',	'NS-IBTS/1991/1/SCO2/44/GOV')
+HH_gov$DoorSpread[HH_gov$UniqueID%in%list]<-NA
+
+# check that uploads have translated onto DATRAS
+sco<-subset(HH_gov, HH_gov$Country=="SCO"&HH_gov$Year==2000&HH_gov$Survey=="NS-IBTS",)
+plot(sco$Depth, sco$DoorSpread, pch=21, col="grey")
+# outliers removed
+
+###########################
+# Check: EnglandNS-IBTS Q1#
+###########################
+# The following stations have outlying net opening values, 
+# can you verify that these outliers are true values (figure 1.1.1.13/14).
+# response was to use all but one - changed below
+HH_gov$Netopening[HH_gov$UniqueID=="NS-IBTS/1998/3/CIR/66/GOV	"]<-NA
+
+###################### 
+# Denmark NS-IBTS Q1 #
+######################
+# In figure 1.1.1.15 can you explain why the sweep length 
+# varies so much in the early 1990’s? 
+# check has this been removed
+plot(HH_gov$Depth[HH_gov$Country=="DEN"], HH_gov$SweepLngt[HH_gov$Country=="DEN"],
+     pch=19)
+# warp values are still recorded in place of sweeps
+# great craic, lets fix this
+den<-HH_gov[HH_gov$Country=="DEN"& HH_gov$SweepLngt>111]
+summary(den$Year)
+# gotta catch them all - range from 1991 to 1995 425obs
+# want to move the warp lengths to the right spot too
+
+list<-den$UniqueID
+HH_gov$Warplngt[HH_gov$UniqueID%in%list]<-HH_gov$SweepLngt[HH_gov$UniqueID%in%list]
+HH_gov$SweepLngt[HH_gov$UniqueID%in%list]<-NA
+
+# Question: In 1998 the doorspread is have quite large values 
+# in depth range of 74m to 137m. Are these values the same as in 
+# your dataset, and do you know why this has occurred?
+# KW: Incorrect data make -9 (NA)
+list<- c( 'NS-IBTS/1998/1/DAN2/14/GOV','NS-IBTS/1998/1/DAN2/15/GOV',
+          'NS-IBTS/1998/1/DAN2/16/GOV','NS-IBTS/1998/1/DAN2/46/GOV',
+          'NS-IBTS/1998/1/DAN2/9/GOV','NS-IBTS/1998/1/DAN2/13/GOV',
+          'NS-IBTS/1998/3/DAN2/24/GOV','NS-IBTS/1998/3/DAN2/49/GOV',
+          'NS-IBTS/1998/3/DAN2/45/GOV','NS-IBTS/1998/3/DAN2/48/GOV')
+HH_gov$DoorSpread[HH_gov$UniqueID%in%list]<-NA
+# outliers removed
+
+############################
+# Netherlands IBTS Q1      #
+############################
+# For station with unique ID 2004/1/TRI2/33/GOV the door spread 
+# is 118m at a depth of 64m. Is the door spread value correct?
+# IdB: We agree it is an outlier, but we cannot find the hard 
+# copies for hauls 1-38 in 2004 so we’re not able to check
+# Decision - remove outlier
+HH_gov$DoorSpread[HH_gov$UniqueID=="NS-IBTS/2004/1/TRI2/33/GOV"]<-NA
+
+# Question 1: 1984/1/TRI/4/GOV
+# NetOpening is 8m at depth of 78m. This is an outlier, 
+# but is it a possible value?	
+# IdB: Change into 6, the hard copy is not too clear 
+HH_gov$Netopening[HH_gov$UniqueID=="NS-IBTS/1984/1/TRI/4/GOV"]<-6
+
+####################### 
+### GERMANY NS-IBTS ###
+####################### 
+
+# Question: sweep of 80m for H18 gear 
+# funnysweep<-subset(HH, c(HH$Country=="GFR"& HH$Survey=="NS-IBTS"& Year=="1984"),)
+# no need to worry as H18 gear will be removed in the standard gear type.
+
+# Question: Doorspread is not consistent with depth, 
+# can you verify that these outliers are the correct values?
+# MK: Failures in the scanmar 
+list<-c("NS-IBTS/2011/1/WAH3/14/GOV", "NS-IBTS/2014/1/WAH3/11/GOV", 
+        "NS-IBTS/2014/1/WAH3/7/GOV", "NS-IBTS/2014/1/WAH3/8/GOV")
+HH_gov$DoorSpread[HH_gov$UniqueID%in%list]<-NA
+
+# Question: Why was the ship SOL used in Q1, 1992, 
+# and why was the area surveyed so different in this year?        
+# MK: SOL shouldn't be here. GOV is non standard and the data
+# shouldn't be included in DATRAS. 
+delete_ship<-subset(HH_gov, HH_gov$Year=="1992"&
+                      HH_gov$Country=="GFR"
+                    & HH_gov$Ship=="SOL",)
+list<-(delete_ship$UniqueID)
+
+HH_gov<-subset(HH_gov, !HH_gov$UniqueID%in%list, )
+
+####################
+#Sweden NS-IBTS Q1 # 
+####################
+plot(HH_gov$Depth[HH_gov$Country=="SWE"],HH_gov$WingSpread[HH_gov$Country=="SWE"], pch=21, col="grey")
+# outlier not removed
+HH_gov$WingSpread[HH_gov$UniqueID=='NS-IBTS/2014/1/DANS/30/GOV']<-NA
+
+#####################
+# France NS-IBTS Q1 #
+#####################
+#Wingspread is not consistent with depth, 
+#can you verify that these outliers are true values. 
+# YV: Values are too hight, delete and estimate based on model.
+# Wingspread normally 15m 
+
+list<-c("NS-IBTS/1993/3/THA/53/GOV", "NS-IBTS/1995/1/THA/29/GOV")
+HH_gov$WingSpread[HH_gov$UniqueID%in%list]<-NA
+# 1995 record changed to 16
+# remove 1993 record only
+HH_gov$WingSpread[HH_gov$UniqueID=="NS-IBTS/1995/1/THA/29/GOV"]<-16
+
+# Netopening is not consistent with depth, 
+# can you verify that these outliers are true values. 
+# YV/FC: Incorrect use -9 
+list<-c("NS-IBTS/1993/3/THA/9/GOV", "NS-IBTS/1994/1/THA/31/GOV")
+HH_gov$Netopening[HH_gov$UniqueID%in%list]<-NA
+
+# Doorspread is not consistent with depth, 
+# can you verify that these outliers are true values. 
+# YV/FC: Need to be recalculated
+list<-c( 'NS-IBTS/1996/3/THA2/21/GOV','NS-IBTS/1996/3/THA2/20/GOV',
+         'NS-IBTS/1997/1/THA2/1/GOV','NS-IBTS/1997/1/THA2/6/GOV',
+         'NS-IBTS/1997/1/THA2/8/GOV','NS-IBTS/1997/1/THA2/41/GOV',
+         'NS-IBTS/2000/1/THA2/56/GOV','NS-IBTS/2002/1/THA2/29/GOV',
+         'NS-IBTS/2010/1/THA2/21/GOV','NS-IBTS/2010/1/THA2/26/GOV',
+         'NS-IBTS/2010/1/THA2/29/GOV','NS-IBTS/2015/1/THA2/38/GOV')
+HH_gov$DoorSpread[HH_gov$UniqueID%in%list]<-NA
+
+# Depth of 61m netopening 9.8m. This is an outlier,
+# can you check that the value is correct.
+# YV/FC: Incorrect value
+HH_gov$Netopening[HH_gov$UniqueID=='NS-IBTS/2011/1/THA2/74/GOV']<-NA
+
+#########################################################################
+# 1.1.2	The Third Quarter International Bottom Trawl Survey (GNSIntOT3) #
+#########################################################################
+
+#########################
+### NORWAY NS-IBTS Q3 ###
+#########################
+# Question 3: haul duration
+# JD: 2008/3/JHJ/259/GOV: this is not an IBTS haul. 
+# Was made for another purpose (should be coded HaulVal=I).         
+# 2008/3/JHJ/269/GOV: it looks like tow time was calculated 
+# incorrectly. Distance =2.4 km, speed at 3.4 n mi = 6.297 km/hr: 
+# 2.4/6.297*60 = 22.9 minutes
+HH_gov$HaulVal[HH_gov$UniqueID=="NS-IBTS/2008/3/JHJ/259/GOV"]<-"I"
+HH_gov$HaulDur[HH_gov$UniqueID=="NS-IBTS/2008/3/JHJ/269/GOV"]<-22.9
+# One sample has a 60 min duration, is there a reason for this?
+# JD: looks to be an error. Distance/speed*60 = 32.4 minutes
+HH_gov$HaulDur[HH_gov$UniqueID=="NS-IBTS/1999/3/MIC/619/GOV"]<-32.4
+
+# 2011/3/JHJ/242/GOV	Netopening is 8.8, at a depth of 64m, 
+# this net opening is an outlier, is the value correct?	
+# JD: Unlikely to be correct. No correction (NA).
+# 1999/3/MIC/591/GOV	Netopeing is 7.7m depth 47m, this net opening
+# is a meter more than the next largest value. 
+# Is this an acceptable value for this ship?	
+# Unlikely to be correct. No correction (NA).
+list<-c("NS-IBTS/2011/3/JHJ/242/GOV", "NS-IBTS/1999/3/MIC/591/GOV")
+HH_gov$Netopening[HH_gov$UniqueID%in%list]<-NA
+
+#########################
+## England NS-IBTS Q3 ##
+#########################
+# At station with unique ID 2000/3/CIR/17/GOV the shoot and haul lat
+# and long are the same values, can you check this please?
+# G.B  Original data available. Haul long Input incorrectly. Change posn
+# Shot: 54.639; 5.501
+# Haul: 54.641; 5.564
+check<-HH_gov[HH_gov$UniqueID=="NS-IBTS/2000/3/CIR/17/GOV"]
+# need to change all postional data
+HH_gov$ShootLat[HH_gov$UniqueID=="NS-IBTS/2000/3/CIR/17/GOV"]<-54.639
+HH_gov$ShootLong[HH_gov$UniqueID=="NS-IBTS/2000/3/CIR/17/GOV"]<-5.501
+HH_gov$HaulLat[HH_gov$UniqueID=="NS-IBTS/2000/3/CIR/17/GOV"]<-54.641
+HH_gov$HaulLong[HH_gov$UniqueID=="NS-IBTS/2000/3/CIR/17/GOV"]<-5.564
+
+#########################################################################
+# 1.1.3	The Fourth Quarter French Channel Groundfish Survey  (GNSFraOT4)#
+#########################################################################
+
+# quick check from Appendix 1 Figure 1.1.3.3 which highlights a haul duration of
+# 90 minutes in the haul with unique ID 1995/4/GWD/49/GOV. Is this correct?
+# Y.V & F.C:  This should be 30 mins not 90 mins.
+# haul not corrected
+HH_gov$HaulDur[HH_gov$UniqueID=="FR-CGFS/1995/4/GWD/49/GOV"]<-30
+
+# Figure 1.1.3.4, shows stations in 2012 which have been recorded with
+# shoot positions on land. What is the correct shoot positions?
+# Y.V & F.C:  This is clearly an error; I will check the real values and 
+# send them to you.
+plot(HH_gov$ShootLong[HH_gov$Survey=="FR-CGFS"], 
+     HH_gov$ShootLat[HH_gov$Survey=="FR-CGFS"],
+     pch=19)
+abline(h=49.5, col="grey")
+abline(h=50, col="grey")
+abline(h=50.5, col="grey")
+abline(h=51, col="grey")
+abline(v=-1, col="grey")
+abline(v=0, col="grey")
+abline(v=1, col="grey")
+abline(v=2, col="grey")
+
+# find stations on land
+landlocked<-HH_gov[HH_gov$StatRec=="27F0"]
+points(HH_gov$ShootLong[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/49/GOV"], 
+            HH_gov$ShootLat[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/49/GOV"],
+            pch=19, col="red")
+points(HH_gov$ShootLong[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/50/GOV"], 
+       HH_gov$ShootLat[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/50/GOV"],
+       pch=19, col="red")
+points(HH_gov$ShootLong[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/51/GOV"], 
+       HH_gov$ShootLat[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/51/GOV"],
+       pch=19, col="red")
+landlocked<-HH_gov[HH_gov$StatRec=="28F0"]
+points(HH_gov$ShootLong[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/52/GOV"], 
+       HH_gov$ShootLat[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/52/GOV"],
+       pch=19, col="red")
+points(HH_gov$ShootLong[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/53/GOV"], 
+       HH_gov$ShootLat[HH_gov$UniqueID=="FR-CGFS/2012/4/GWD/53/GOV"],
+       pch=19, col="red")
+list<-c("FR-CGFS/2012/4/GWD/49/GOV", "FR-CGFS/2012/4/GWD/50/GOV",
+        "FR-CGFS/2012/4/GWD/51/GOV", "FR-CGFS/2012/4/GWD/52/GOV",
+        "FR-CGFS/2012/4/GWD/53/GOV")
+HH_gov$HaulLong[HH_gov$UniqueID%in%list]<-HH_gov$HaulLong[HH_gov$UniqueID%in%list]*-1
+HH_gov$ShootLong[HH_gov$UniqueID%in%list]<-HH_gov$ShootLong[HH_gov$UniqueID%in%list]*-1
+# check Stat Rec is right?
+HH_gov$StatRec[HH_gov$UniqueID%in%list]<-c("27E9", "27E9", "28E9", "28E9" ,"28E9")
+#######################
+# 1.2 The Celtic Seas #
+#######################
+##############################################################
+# 1.2.1 The First Quarter Scottish West Coast IBTS (CSScoOT1)#
+##############################################################
+# In figure 1.2.1.2 there are a few door spread values that look like 
+# outliers, can you check them please.
+# Unique ID: 2000/1/SCO3/54/GOV: Depth 90m, Doorspread 113m
+# F.B: (this was 84 in FMD so will reupload to DATRAS) 
+# CHECK HAS CHANGE OCCURED ON DATRAS
+check<-HH_gov[HH_gov$UniqueID=="SWC-IBTS/2000/1/SCO3/54/GOV"]
+# doorspread changed at source
+# In figure 1.2.1.4 Warp length has got a generally linear 
+# relationship with depth. Can you check if the outlying values likely to 
+# be correct?
+# F.B: See table 1.2.1.1 below, erroneous values in red but many of the others
+# I have left as they are within what we may consider reasonable.
+# Check changes
+plot(HH_gov$Depth[HH_gov$Survey=="SWC-IBTS"], HH_gov$Warplngt[HH_gov$Survey=="SWC-IBTS"],)
+points(430, 450, col="red", pch=16)
+points(550,180, col="red", pch=16)
+check<-HH_gov[HH_gov$UniqueID=="SWC-IBTS/2012/4/SCO3/49/GOV"]
+# the correction was that depth was 175m adnd warp was 550 - values mixed up
+HH_gov$Depth[HH_gov$UniqueID=="SWC-IBTS/2012/4/SCO3/49/GOV"]<-175
+HH_gov$Warplngt[HH_gov$UniqueID=="SWC-IBTS/2012/4/SCO3/49/GOV"]<-550
+# station with unique ID SWC-IBTS/2009/4/SCO3/15/GOV
+# check Depth is plausable
+check<-HH_gov[HH_gov$UniqueID=="SWC-IBTS/2009/4/SCO3/15/GOV"]
+# given the location of this sample the depth is likely to be incorrect 
+# should be about 130 m depth which will make warp good
+# make depth NA and retain warp
+HH_gov$Depth[HH_gov$UniqueID=="SWC-IBTS/2009/4/SCO3/15/GOV"]<-NA
+######################################################################
+##1.2.4 The First Quarter Northern Irish Groundfish Survey (CSNIrOT1)#
+######################################################################
+# At the station with the unique ID 2010/1/COR/44/ROT the haul duration
+# is recorded as 891 mins. Is this correct? 
+# M.L: haul duration corrected to 61min.
+check<-HH_rot1[HH_rot1$UniqueID=="NIGFS/2010/1/COR/44/ROT"]
+# changed at source no action needed
+
+# In figure 1.2.4.1 there are outliers in the following door spread values:
+# •	Unique ID: 2008/1/COR/15/ROT, Depth 48 m Door spread 26.2 m
+# •	Unique ID: 2009/1/COR/37/ROT, Depth 62 m Door spread 31.3 m
+# Can you check these please?
+# M.L: Unique ID: 2008/1/COR/15/ROT, Door spread corrected to 34.2 m 
+# and Unique ID: 2009/1/COR/37/ROT, Door spread corrected to 38.3 m
+check<-HH_rot1[HH_rot1$UniqueID=="NIGFS/2009/1/COR/37/ROT"]
+#######################################################################
+# 1.2.5 The Fourth Quarter Northern Irish Groundfish Survey (CSNIrOT4)#
+#######################################################################
+# Country: Northern Ireland, Data Provider: Mathieu Lundy, File Type: HH
+# At the station with unique ID 2014/4/COR/50/ROT no depth value has been 
+# recorded, is this available? 
+# M.L: Yes, the depth should be 39m.
+check<-HH_rot1[HH_rot1$UniqueID=="NIGFS/2014/4/COR/50/ROT"]
+#######################################################################
+# 1.3.5 The Fourth Quarter Portuguese Groundfish Survey (BBICPorOT4) ##
+#######################################################################
+# 2005/4/NOR/32/NCT Depth: 131m Warp length: 1500m. 
+# Can you check if this outlier is the correct value. 
+# C.C: Error this should be 500m 
+HH_nct$Warplngt[HH_nct$UniqueID=="PT-IBTS/2005/4/NOR/32/NCT"]<-500
+##################################################################
+##  1.4.1 The Third Quarter Scottish Rockall Survey (WAScoOT3)  ##
+##################################################################
+# In figure 1.4.1.1 the station with the unique ID 2013/3/SCO3/17/GOV has a depth 
+# of 195m and a door spread of 72m. Can you check if this outlier is correct please.
+# F.B: This was for haul 307 and after having looked at the RADOS file for this 
+# haul I have decided to remove the doors spread value as the unit was faulty 
+# midway through and so cannot trust the reading which looked suspect from the 
+# start. I will re-upload this survey to DATRAS.
+check<-HH_gov[HH_gov$UniqueID=="ROCKALL/2013/3/SCO3/307/GOV"]
+
+# In figure 1.4.1.3 at station with unique ID 1999/3/SCO3/43/GOV, the net opening
+# is 2.7m and the depth is 234m, Can you check this outlier please. 
+# F.B: Haul 446. With no RADOS file to interrogate and no wing spread reading
+# it is very hard to know whether this was a case of overspreading of the net 
+# (in which case it is genuine). I have removed and re-uploaded to DATRAS.
+check<-HH_gov[HH_gov$UniqueID=="ROCKALL/1999/3/SCO3/43/GOV"]
+
+# In figure 1.4.1.4 at station with unique ID 2011/3/SCO3/46/GOV, the warp length 
+# is 480m at a depth of 480 m, is this correct?
+# F.B: Haul 442, Depth had been incorrectly recorded as 480 and should been 150m.
+# Has been corrected on FMD and have re-uploaded to DATRAS.
+check<-HH_gov[HH_gov$UniqueID=="ROCKALL/2011/3/SCO3/46/GOV"]
+
+##############################################
+# ALL HAUL CORRECTION CHECKED AND COMPELTED  # 
+# NOW HAVE BEST AVAILABLE DATA ACCORDING TO  #
+# NATIONAL DATA PROVIDERS ACROSS ALL SURVEYS #
+##############################################
+
+######################################################
+# Check out all biological data to insure corrections#
+# are in datras/fix for product only base on answers #
+######################################################
