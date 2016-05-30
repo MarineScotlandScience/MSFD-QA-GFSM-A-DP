@@ -1,0 +1,278 @@
+## Script Info
+## Purpose: Compiling the Species lists of all datras datasets
+## to get the Aphia Codes for the complete species lists
+## Author: Meadhbh Moriarty
+## Reviewers:
+## Date: 23/05/2016
+
+## some general housekeeping
+## remove objets stored in R environment
+rm(list=ls())
+## set working directory
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process")
+
+## check proxy settings
+Sys.getenv("http_proxy")
+## fix ";" to ":" to allow connection be established
+Sys.setenv(http_proxy="http://192.168.41.8:80")
+# proxy for france
+# Sys.setenv(http_proxy="http://134.246.166.17:3128")
+#################
+# LOAD PACKAGES #
+#################
+library(doParallel)
+library(data.table)
+library(SSOAP)
+library(plyr)
+#############
+# LOAD DATA #
+#############
+
+MySpeciesList<-read.csv("MySpeciesList_23-05-2016.csv")
+names(MySpeciesList)
+
+#-------------------------------------------#
+# Quick check that function is doing its job# 
+#-------------------------------------------#
+ w = processWSDL("http://www.marinespecies.org/aphia.php?p=soap&wsdl=1")
+ iface = genSOAPClientInterface(, w)
+ AphiaID = iface@functions$getAphiaID("Solea solea",1,('http://www.marinespecies.org/aphia.php?p=soap'))
+ print(AphiaID)
+# should output '[0] 127160'
+#------------------------------------------------------------------#
+# Get original AphiaID's for specieslist only is names not for IDs #
+#------------------------------------------------------------------#
+ 
+# AphiaMatch <- function(x) { 
+#   result<-NULL
+#   for (i in 1:length(x)) {
+#     AphiaRecord <- iface@functions$getAphiaID(x[i],1,('http://www.marinespecies.org/aphia.php?p=soap')) 
+#     result<-c(result, AphiaRecord)
+#   }
+#   return(result)
+# }
+ 
+ #------------------------------------------------#
+ # Get accepted synonym AphiaID's for specieslist #
+ #------------------------------------------------#
+ 
+ SynResolv <- function(x) { 
+   result<-NULL
+   for (i in 1:length(x)) {
+     AphiaRecord <- iface@functions$getAphiaRecordByID(x[i],('http://www.marinespecies.org/aphia.php?p=soap')) 
+     result<-c(result, slot(AphiaRecord, "valid_AphiaID"))
+   }
+   return(result)
+ }
+
+ AccTaxID<-SynResolv(MySpeciesList$list_unique)
+ 
+ 
+ #---------------------------------------------------------------------
+ # Add full record information (classification, ranking, authority,...)
+ #---------------------------------------------------------------------
+ 
+ getFullRecord <- function(x) { 
+   result<-NULL
+   for (i in 1:length(x)) {
+     AphiaRecord <- iface@functions$getAphiaRecordByID(x[i],('http://www.marinespecies.org/aphia.php?p=soap')) 
+     slotnames <- slotNames(AphiaRecord)
+     slotlist <- data.frame(rbind(1:length(slotnames)))
+     names(slotlist) <- slotnames
+     for(y in slotnames) {
+       #R cannot handle a slot name "class"
+       if (y == "CLASS") {slotlist[1,y] <- '(empty)'}
+       else {slotlist[1, y] <- slot(AphiaRecord,  y)}
+     }
+     result<-rbind(result, slotlist)
+   }
+   return(result)
+ }
+ 
+
+# get full taxonomic record for the 1049 aphia id records
+ AphiaRecords<-getFullRecord(AccTaxID)
+ head(AphiaRecords)
+# write a table to save the information
+ write.table(AphiaRecords, "AphiaRecords_23_05_2016.csv", sep=",")
+# attach the Aphia records to the biological data 
+# change the AphiaID to Valid_Aphia to merge the two dataframes
+ bio$AphiaID<-bio$Valid_Aphia 
+ MySpecList<-merge(bio, AphiaRecords, by="AphiaID")
+ head(MySpecList)
+# write a table to save the all the information
+ write.table(MySpecList, "Species_Data_09_12_2015.csv", sep=",") 
+ 
+# Delete non fish records from bio file (MySpecList)
+MyFishList<-subset(MySpecList, phylum=="Chordata")
+MyFishList$totalno<-(as.numeric(MyFishList$TotalNo))
+
+# Delete Country DUM - not used in HL file
+keep<-c("DEN", "ENG", "FRA", "GFR", "IRL", "NED", "NI", "POR", "SCO", "SPA", "SWE")
+MyFishList<-subset(MyFishList, Country==keep)
+
+summaryfish<-ddply(MyFishList, c( "Country", "Survey", "Quarter", "Year",
+                                 "Valid_Aphia","rank","scientificname" ), 
+                    summarise, sumtotalno=sum(totalno))
+ nospecies<-ddply(summaryfish, c("Country", "Survey", "Quarter", 
+                                "rank", "Year"), summarise, 
+                  countofspecies=length(Valid_Aphia) )
+ 
+ nospeciescountryyear<-ddply(summaryfish, c("Country", "Survey",
+                                            "rank", "Year"), summarise, 
+                             countofspecies=length(Valid_Aphia) )
+ 
+ library(ggplot2)
+ k<-ggplot(nospecies, aes(x=Year, y=countofspecies, colour=Quarter, group=Quarter))
+ k + geom_line(aes(fill=rank)) +facet_grid(rank~Country+Survey, margins=F, drop=T)
+ k + geom_bar(aes(fill=factor(rank))) +facet_grid(.~Country+Survey, margins=F, drop=T)
+ 
+ 
+ 
+ 
+
+ 
+ k<-ggplot(nospeciescountryyear, aes(x=Year, y=countofspecies, colour=rank, group=rank))
+ k + geom_line(aes(fill=rank)) +facet_grid(rank~Survey+Country, margins=F, drop=T)
+ 
+ k1<-ggplot(subset(nospecies, rank%in%"Species"))
+ k2<-k1 + geom_line(aes(x=Year, y=countofspecies, colour=Quarter, group=Quarter, size=rank)) + facet_wrap(~Survey+Country, ncol=3, drop=T)
+ k2 + theme(axis.text.x = element_text(angle=90, vjust=1))
+ 
+ l1<-ggplot(subset(nospeciescountryyear, rank%in%"Species"))
+ l2<-l1 + geom_line(aes(x=Year, y=countofspecies, colour=rank, group=rank, size=rank)) + facet_wrap(~Survey+Country, ncol=3, drop=T)
+ l2 + theme(axis.text.x = element_text(angle=90, vjust=1))
+ 
+ 
+ #---------------------------------------------------------------------
+ # Get full record information for all other surveys eg Spanish?
+ #---------------------------------------------------------------------
+library(rfishbase)
+
+ MyFishDistribution<-distribution("Clupea harengus")
+
+MyFishLW<-length_weight("Clupea harengus")
+ 
+Denmark83_86<-subset(MyFishList, Year<1987 & Survey%in%"NS-IBTS" & Country%in%"DEN")
+
+head(Denmark83_86)
+write.csv(Denmark83_86, "denmarkDATRASDATA.csv")
+herring<-species("Clupea harengus")
+tables<-docs()
+faoareas<-faoareas("Clupea harengus")
+
+#--------------------------------
+# Whats the story with the gobies in each survey? #
+#-------------------------------
+names(MyFishList)
+levels(as.factor(MyFishList$family))
+gobies<-subset(MyFishList, family%in%"Gobiidae")
+
+summarygobies<-ddply(gobies, c("Country", "Survey",
+                         "rank", "Year"), summarise, 
+          countofspecies=length(Valid_Aphia) )
+
+
+k<-ggplot(summarygobies, aes(x=Year, y=countofspecies, colour=rank, group=rank))
+kk<-k + geom_line(aes(fill=rank)) + facet_wrap(~Survey+Country, ncol=3, drop=T)
+kk + theme(axis.text.x = element_text(angle=90, vjust=1))
+
+k1<-ggplot(subset(nospecies, rank%in%"Species"))
+k2<-k1 + geom_line(aes(x=Year, y=countofspecies, colour=Quarter, group=Quarter, size=rank)) + facet_wrap(~Survey+Country, ncol=3, drop=T)
+k2 + theme(axis.text.x = element_text(angle=90, vjust=1))
+
+l1<-ggplot(subset(nospeciescountryyear, rank%in%"Species"))
+l2<-l1 + geom_line(aes(x=Year, y=countofspecies, colour=rank, group=rank, size=rank)) + facet_wrap(~Survey+Country, ncol=3, drop=T)
+l2 + theme(axis.text.x = element_text(angle=90, vjust=1))
+
+
+--------------
+  summarygear<-ddply(MyFishList, c("Gear", "Country", 
+                                  "Survey"), summarise, 
+                       count=length(Gear) )
+# My species list 
+head(AphiaRecords)
+# reduce file to Chordata Only
+MyAphiaFishList<-subset(AphiaRecords, phylum=="Chordata")
+names(MyAphiaFishList)
+write.csv(MyAphiaFishList, "WoRMS_Corrected_FishList.csv")
+# load rfishbase lib
+library(rfishbase)
+MyFishBaseFishList<-species(MyAphiaFishList$scientificname)
+write.csv(MyFishBaseFishList, "FishBaseSpeciesData.csv")
+MyFishBaseFishDistribution<-distribution(MyFishBaseFishList$sciname)
+MyFishBaseLengthWeight<-length_weight(MyFishBaseFishList$sciname)
+# Simons species list
+simonsspplist<-read.csv("speciesdata.csv")
+
+names(simonsspplist)
+
+AMspplist<-AphiaMatch(simonsspplist$CorrSciName)
+simonsspplist$AMspplist<-AMspplist
+write.csv(simonsspplist,"speciesdata_with_AphiaMatch.csv")
+#-------------------------------------------
+# Get accepted synonym AphiaID's for specieslist 
+synRes_sppList<-SynResolv(AMspplist)
+
+
+#---------------------------------------------------------------------
+# Add full record information (classification, ranking, authority,...)
+#---------------------------------------------------------------------
+
+SppList_full<-getFullRecord(synRes_sppList)
+names(SppList_full)
+write.csv(SppList_full, "spp_list_Worms.csv")
+simonsspplistfishbase<-species(SppList_full$scientificname)
+write.csv(simonsspplistfishbase, "spp_list_fishbase.csv")
+
+simonsspplenghtsfishbase<-length_weight(SppList_full$scientificname)
+write.csv(simonsspplenghtsfishbase, "spp_lenghts_fishbase.csv")
+
+
+# ----------------------------------
+# Explore the species data in europe
+# ----------------------------------
+
+head(MySpecList)
+killer<-subset(MySpecList, Valid_Aphia==137102,)
+bad_range<-subset(MySpecList, scientificname=='Nettastoma melanurum',)
+bad_range<-subset(MySpecList, scientificname=='Ephippion guttifer',)
+bad_range<-subset(MySpecList, scientificname=='Deania profundorum',)
+bad_range<-subset(MySpecList, scientificname=='Benthodesmus elongatus',)
+bad_range<-subset(MySpecList, scientificname=='Lestidiops jayakari jayakari',)
+bad_range<-subset(MySpecList, scientificname=='Gasterosteus aculeatus williamsoni',)
+bad_range<-subset(MySpecList, scientificname=='Solea senegalensis',)
+bad_range<-subset(MySpecList, scientificname=='Monochirus hispidus',)
+skate<-subset(MySpecList, scientificname=='Bathyraja brachyurops',)
+library(plyr)
+str(MyFishList)
+summary_fish_numbers<-ddply(MyFishList, c("Country","Survey", "Quarter", 
+                                          "Year", "Ship", "HaulNo", 
+                                          "scientificname", "Sex", "SpecVal",
+                                          "totalno"), summarise, 
+                      sumnoatlngt=sum(as.numeric(HLNoAtLngt)*as.numeric(SubFactor)))
+291990
+114038+
+177904
+str(summary_fish_numbers)
+match<-subset(summary_fish_numbers, 
+              sumnoatlngt=totalno, )
+nomatch_fish_numbers<-subset(summary_fish_numbers, 
+                             sumnoatlngt>totalno,
+                             )
+nomatch_fish_numbers<-subset(nomatch_fish_numbers, 
+                             totalno>0,
+)
+nomatch_fish_numbers1<-subset(summary_fish_numbers, 
+                             sumnoatlngt<totalno,
+)
+274473+20
+levels(as.factor(nomatch_fish_numbers1$Survey))
+levels(as.factor(nomatch_fish_numbers$Survey))
+write.csv(nomatch_fish_numbers1, "nomatch_fish_numbers1.csv")
+write.csv(nomatch_fish_numbers, "nomatch_fish_numbers.csv")
+summaryfish<-ddply(MyFishList, c( "Country", "Survey", "Quarter", "Year",
+                                  "Valid_Aphia","rank","scientificname" ), 
+                   summarise, sumtotalno=sum(totalno))
+head(summaryfish)
+write.csv(summaryfish, "summary_of_fish_per_country_per_Year.csv")
