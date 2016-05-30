@@ -68,6 +68,11 @@ library(plyr) #for summariesing data
 library(marmap) #for depth estimates
 #citation("marmap")
 library(colorspace)
+library(plot3D)
+library(rgl)
+library(Hmisc)
+library(MuMIn)
+library(mapplots)
 ##################
 # Load functions #
 ##################
