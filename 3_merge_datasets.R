@@ -89,6 +89,7 @@ HL_beams<-rbind(HL_BTS, HL_BTS7a, fill=TRUE)
 # HL_baka has 799682
 205818+361715+232149 #match
 # HH_baka has two extra cols - misspellings
+names(HH_baka)
 HH_baka$Buoyancy<-NULL
 HH_baka$Buoyancy<-HH_baka$Bouyancy
 HH_baka$Bouyancy<-NULL
@@ -130,7 +131,6 @@ HH_rot$UniqueID<-paste(HH_rot$Survey,HH_rot$Year,HH_rot$Quarter,
                        HH_rot$Ship, HH_rot$HaulNo, HH_rot$Gear, sep="/")
 HL_rot$UniqueID<-paste(HL_rot$Survey,HL_rot$Year,HL_rot$Quarter, 
                        HL_rot$Ship, HL_rot$HaulNo, HL_rot$Gear, sep="/")
-
 
 ####################################
 ## Sort out data frame structure HH#
@@ -237,7 +237,7 @@ system.time(replace_function(HL_rot))
 
 # all offending -9 should now be gone from all my data tables
 # check summarys and insure the data sturcture is sound
-str(HL_gov)
+str(HH_gov)
 summary(HL_gov)
 
 # if all is good- move on, if not rerun numeric col stuff again after applying the
