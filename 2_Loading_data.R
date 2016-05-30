@@ -118,7 +118,7 @@ NI_extra<-read.csv("./Data/National Submissions/Datras_MSFD_NI/Datras_MSFD.csv",
 # All should now be updated and good to go
 # Add in National Submissions - be aware that Fran needs to update these and
 # send corrected data
-setwd("~/MSFD-QA-GFSM-A-DP/Data/National Submissions/Spain_18-03-2016/HH_ARSA") # set path here
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process/Data/National Submissions/Spain_18-03-2016/HH_ARSA") # set path here
 files <- list.files()
 
 for (i in 1:length(files)){
@@ -135,7 +135,7 @@ HH_ARSA<-dataset
   # then remove dataset and start again with next files
 rm(dataset)
 rm(tmp)
-setwd("~/MSFD-QA-GFSM-A-DP/Data/National Submissions/Spain_18-03-2016/HH_SPNGFS")
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process/Data/National Submissions/Spain_18-03-2016/HH_SPNGFS")
 files <- list.files()
 
 for (i in 1:length(files)){
@@ -153,7 +153,7 @@ HH_SPNGFS<-dataset
 rm(dataset)
 rm(tmp)
 
-setwd("~/MSFD-QA-GFSM-A-DP/Data/National Submissions/Spain_18-03-2016/HL_ARSAsComplete")
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process/Data/National Submissions/Spain_18-03-2016/HL_ARSAsComplete")
 files <- list.files()
 
 for (i in 1:length(files)){
@@ -171,7 +171,7 @@ HL_ARSA<-dataset
 rm(dataset)
 rm(tmp)
 
-setwd("~/MSFD-QA-GFSM-A-DP/Data/National Submissions/Spain_18-03-2016/HL_SPNGFS")
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process/Data/National Submissions/Spain_18-03-2016/HL_SPNGFS")
 files <- list.files()
 
 for (i in 1:length(files)){
@@ -189,7 +189,7 @@ HL_SPNGFS<-dataset
 rm(dataset)
 rm(tmp)
 
-setwd("~/MSFD-QA-GFSM-A-DP/Data/National Submissions/Spain_18-03-2016/HL_SPPORC")
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process/Data/National Submissions/Spain_18-03-2016/HL_SPPORC")
 files <- list.files()
 
 for (i in 1:length(files)){
@@ -208,7 +208,7 @@ rm(dataset)
 rm(tmp)
 
 
-setwd("~/MSFD-QA-GFSM-A-DP/Data/National Submissions/Spain_18-03-2016/HH_SPPORC")
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process/Data/National Submissions/Spain_18-03-2016/HH_SPPORC")
 files <- list.files()
 
 for (i in 1:length(files)){
@@ -227,7 +227,7 @@ rm(dataset)
 rm(tmp)
 
 # Reset Working Directory
-setwd("~/MSFD-QA-GFSM-A-DP")
+setwd("~/MSFD-QA-GFSM-A-DP/Data_Cleaning_Process")
 
 # Sort out spanish data frames so they match the others
 names(HH_SPNGFS)<-c("RecordType", "Quarter", "Country" , "Ship" , "Gear" , 
