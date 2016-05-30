@@ -133,8 +133,8 @@ FRA_HH_corrections$DateofCalculation<-NA
 # Use DATRAS distances and correct the ones that are really bad like everyone else
 french_ibts$Distance<-NA
 FRA_HH_corrections$Distance<-NA
-test<- fun.12(french_ibts, FRA_HH_corrections)
-test1 <-fun.12(FRA_HH_corrections, french_ibts)
+test<- compare_function(french_ibts, FRA_HH_corrections)
+test1 <-compare_function(FRA_HH_corrections, french_ibts)
 # One difference left - real correction
 # NS-IBTS/1995/1/THA/29/GOV
 # wingspread should be 16 not 50
@@ -189,7 +189,14 @@ names(NS_DEN_add_HL)<-c("RecordType", "Quarter","Country",
                         "HLNoAtLngt","x1", "x1", "x1", "x1", "x1", "x1", 
                         "x1", "x1","x1", "x1", "x1", "x1","x1", "x1", "x1", "x1","x1", "x1",
                         "x1", "x1","x1", "x1", "x1", "x1","x1", "x1", "x1", "x1","x1", "x1", 
-                        "x1", "x1", "x1", "x1", "x1", "x1")
+                        "x1", "x1", "x1", "x1", "x1")
+#names(NS_DEN_add_HL)<-c("RecordType","Quarter","Country","Ship",             
+#                        "Gear", "SweepLngt","GearExp","DoorType",        
+#                        "StNo", "HaulNo","Year","SpecCodeType",    
+#                        "SpecCode","SpecVal","Sex","TotalNo",          
+#                        "CatIdentifier","NoMeas","SubFactor","SubWgt",           
+#                        "CatCatchWgt","LngtCode","LngtClass","HLNoAtLngt",     
+#"x1", "x1","Survey","DateofCalculation","Valid_Aphia") 
 NS_DEN_add_HL$Survey<-"NS-IBTS"
 NS_DEN_add_HL$DateofCalculation<- "NA"
 NS_DEN_add_HL$Valid_Aphia<- NS_DEN_add_HL$SpecCode 
@@ -263,7 +270,43 @@ Den_HL_additions<-subset(NS_DEN_add_HL, match%in%list, )
 # leave the match field as a flag for now - issues with these data that 
 # remain unresolved
 HL_gov1<-rbind(HL_gov, Den_HL_additions, fill=TRUE)
-
+names(HL_gov1)
+HL_gov1$x1<-NULL
+HL_gov1$x1.1<-NULL            
+HL_gov1$x1.2<-NULL
+HL_gov1$x1.3<-NULL
+HL_gov1$x1.4<-NULL
+HL_gov1$x1.5<-NULL
+HL_gov1$x1.6<-NULL
+HL_gov1$x1.7<-NULL
+HL_gov1$x1.8<-NULL
+HL_gov1$x1.9<-NULL
+HL_gov1$x1.10<-NULL
+HL_gov1$x1.11<-NULL
+HL_gov1$x1.12<-NULL
+HL_gov1$x1.13<-NULL
+HL_gov1$x1.14<-NULL
+HL_gov1$x1.15<-NULL
+HL_gov1$x1.16<-NULL      
+HL_gov1$x1.17<-NULL
+HL_gov1$x1.18<-NULL
+HL_gov1$x1.19<-NULL
+HL_gov1$x1.20<-NULL
+HL_gov1$x1.21<-NULL      
+HL_gov1$x1.22<-NULL
+HL_gov1$x1.23<-NULL
+HL_gov1$x1.24<-NULL
+HL_gov1$x1.25<-NULL
+HL_gov1$x1.26<-NULL      
+HL_gov1$x1.27<-NULL
+HL_gov1$x1.28<-NULL
+HL_gov1$x1.29<-NULL
+HL_gov1$x1.30<-NULL
+HL_gov1$x1.31<-NULL
+HL_gov1$x1.32<-NULL
+HL_gov1$x1.33<-NULL
+summary(as.factor(HL_gov1$match))
+HL_gov1$match<-NULL
 #remove intermediate datasets
 rm(Den_HL_additions, Den_ibts,Den_ibts_fish, test, copy_den, copy_gov)
 rm(test1, remove, temp, list, list1)
@@ -662,7 +705,216 @@ check<-HH_gov[HH_gov$UniqueID=="ROCKALL/2011/3/SCO3/46/GOV"]
 # NATIONAL DATA PROVIDERS ACROSS ALL SURVEYS #
 ##############################################
 
+
+# Some extra things I've come across that needs fixing
+HH_baka$Netopening[HH_baka$UniqueID=="SPNGFS/2012/4/CDS/33/BAK"]<-NA
 ######################################################
 # Check out all biological data to insure corrections#
 # are in datras/fix for product only base on answers #
 ######################################################
+
+###################
+# Version Control #
+###################
+# R version 3.2.2 (2015-08-14): Fire Safety 
+# platform       x86_64-w64-mingw32 (64-bit)
+###############
+# Script Info #
+###############
+# This is Script 4a of X 
+# The purpose of this script is to check the merged biological datasets and 
+# insure all changes mentioned in the error trapping documentation are 
+# transfered into the data product
+#
+# AUTHOR: Meadhbh Moriarty, 2016
+# REVIEWED BY: 
+
+######################################################
+# Check out all biological data to insure corrections#
+# are in datras/fix for product only base on answers #
+######################################################
+HL<-rbind(HL_gov1, HL_baka, HL_nct, HL_rot1, HL_beams, fill=T)
+str(HL)
+
+#####################################
+## Appendix Error Trapping Q and A #
+#####################################
+# To check that each error/question raised is addressed, everything 
+# listed in the Appendix must be rechecked and verified as corrected at 
+# source(already on DATRAS)
+# or alternatively fixed here with a line of code
+
+
+#########################################################################
+# 1.1.1	The First Quarter International Bottom Trawl Survey (GNSIntOT1) #
+#########################################################################
+
+#########################
+### NORWAY NS-IBTS Q1 ###
+#########################
+
+
+
+##############################
+# Check: Scotland NS-IBTS Q1 #
+##############################
+# Figure 1.1.1.X shows that at the station with the unique id 
+# 2003/1/SCO3/46/GOV, Acentronura shows up, (Aphia Code 159441)
+# this pygmy pipehorse is native to the Indian and Pacific oceans: 
+# Don’t think this is found in the North Sea. Can you check this record is 
+# correct please? And if so is there a photo to back up the entry?
+check<-subset(HL, Valid_Aphia==159441,)
+#gone
+
+# Figure 1.1.1.X shows 2 records of Bairds smoothhead’s (Aphia Code 126682, 
+# species name Alepocephalus bairdii) this is a deep water species, 
+# the Unique ID 2009/1/SCO3/19/GOV (red) and 2009/1/SCO3/31/GOV(blue). 
+# This is not a North Sea species, can you check that this is the correct 
+# species identification please. 
+check<-subset(HL, Valid_Aphia==126682,)
+#gone
+
+###########################
+# Check: EnglandNS-IBTS Q1#
+###########################
+# Figure 1.1.1.40 shows a record of the gulper shark (Valid Aphid: 105899,
+#Species: Centrophorus granulosus) station with unique ID 2006/3/END/106/GOV 
+# The gulper shark is not traditionally found in North Sea, can you confirm
+# this record please.
+check<-subset(HL, Valid_Aphia==105899,)
+# still there as an observed only record!
+###################### 
+# Denmark NS-IBTS Q1 #
+######################
+# Three records with unique ID’s 2007/3/DAN2/19/GOV, 2008/3/DAN2/17/GOV
+# and 2008/3/DAN2/20/GOV contain Sarpa salpa (figure 1.1.1.43).
+# Sarpa salpa is outside native range, is there any photographs that can 
+# verify this species identification? 
+
+# K.W: Can’t confirm ID is correct. It is a possible error, no 
+# photographs to confirm
+
+
+# The broadnosed skate has not been previously recorded in this habitat 
+# (figure 1.1.1.44), and no other country has recorded this species. 
+# See records 2005/3/DAN2/33/GOV, 2006/3/DAN2/14/GOV, 2006/3/DAN2/14/GOV, 
+# 2006/3/DAN2/18/GOV, 2011/3/DAN2/13/GOV, 2012/1/DAN2/16/GOV, 
+# 2012/1/DAN2/10/GOV and 2012/3/DAN2/18/GOV. 
+# This there any photographs to back up these species ID’s? 
+# K.W: No confirmation but believe it is correct at least from 2009 onwards
+
+# The following hauls contain species with SpecVal 0 – 
+# if one species has invalid information how is the rest of the 
+# information considered valid?
+check<-subset(HL, UniqueID=="2011/1/DAN2/16/GOV"&Valid_Aphia==127143,)
+check<-subset(HL, UniqueID=="2015/1/DAN2/18/GOV"&Valid_Aphia==126436,)
+check<-subset(HL, UniqueID=="2015/1/DAN2/22/GOV"&Valid_Aphia==126436,)
+#gone
+
+
+############################
+# Netherlands IBTS Q1      #
+############################
+# If a fish is measures to a length code of “5” has it also been 
+# measured to a length code of “1”?  5cm length classes are normally 
+# taken for stomach content analyses "25" represents a fish 25-29cm long. 
+# But has this fish also been measured using length code “1”, to the cm below?
+# If so should all length code “5” be removed as they are duplicates of 
+# effort?
+# List of Valid Aphia Codes measured in the length code “5” by Netherlands
+#•	105814 •	105820 •	105887 •	105883 •	126436 •	126555 •	105732
+#•	105821 •	105822 •	105865 •	105865 •	105869 •	105874 •	105876
+#•	105923 •	125546 •	126281 •	126281 •	126375 •	126437 •	126440
+#•	126441 •	126447 •	126461 •	126484 •	126758 •	126977 •	127138
+#•	127143 •	127149 •	127186 •	223866 •	367297 
+# IdB: I assume length code=5 only occurs on older data and only applies to
+# larger length classes. In those days in the Netherlands the larger fish
+# (>= 60 cm?) was measured in 5 cm classes. 
+# So it can well be (and should) that a species in a certain haul is 
+# measured to the cm below (all fish < 60 cm) as well as to the 5 cm 
+# below (>= 60 cm). 
+# If they are not duplicated measurements is the mean length per class 
+# an acceptable measurement? E.g. a fish in class 25-29 will be called a 
+# 27.5cm fish. 
+# IdB: I would say yes. That’s what I normally tend to do when turning 
+# length measurements into weight by using a length-weight relationship;
+# W=a*(length+0.5*measurementunit)b ; a and b being constant values per 
+# species. 
+# okay so all lenght codes can be standardised - i will do this all together
+
+# From 2000-2015 See Table 2, Appendix 1: SpecVal 0, when a haul contains 
+# invalid information on a given species. How does the rest of the haul 
+# contain valid information if one species is listed as having invalid 
+# information?
+# IdB: These HL records contain ‘dummy’ fish –no numbers, no subfact, 
+# specval=0. The records have been created for CA records to which no 
+# length can be connected. We measure the fish twice: once for lf 
+# distribution, once for the biological parameters. Sometimes a fish 
+# is 30.1 cm and measured as 30 in the lf and for biological measurements 
+# it is 29.9 cm. The 30 cm length class in HL does then not link up to the
+# 29 cm class in CA. For your analysis: delete all records where specval=0
+
+HL<-subset(HL, !SpecVal=="0", )
+5486527-5485350
+
+####################### 
+### GERMANY NS-IBTS ###
+####################### 
+# Lmax
+
+
+
+####################
+#Sweden NS-IBTS Q1 # 
+####################
+# Lmax
+#####################
+# France NS-IBTS Q1 #
+#####################
+# Lmax
+
+#########################################################################
+# 1.1.3	The Fourth Quarter French Channel Groundfish Survey  (GNSFraOT4)#
+#########################################################################
+
+#######################
+# 1.2 The Celtic Seas #
+#######################
+##############################################################
+# 1.2.1 The First Quarter Scottish West Coast IBTS (CSScoOT1)#
+##############################################################
+# There is an issue with several fish exceeding the maximum length 
+# recorded, can you check and verify these records. Again due to the size, 
+# see “Lmax_issues_sco.xls” file.
+# F.B: Cross checks completed and corrections made where required.
+
+######################################################################
+##1.2.4 The First Quarter Northern Irish Groundfish Survey (CSNIrOT1)#
+######################################################################
+# Lmax
+
+#######################################################################
+# 1.2.5 The Fourth Quarter Northern Irish Groundfish Survey (CSNIrOT4)#
+#######################################################################
+# Several rounding errors are found in the HL file where total number 
+# of fish is not equal to sum of HL at length*Subfactor. Due to the size 
+# of the file please see “EVHOE_Rounding_Errors.xls file. 
+# M.S: Cross checks completed and corrections made where required.
+
+#######################################################################
+# 1.3.5 The Fourth Quarter Portuguese Groundfish Survey (BBICPorOT4) ##
+#######################################################################
+
+##################################################################
+##  1.4.1 The Third Quarter Scottish Rockall Survey (WAScoOT3)  ##
+##################################################################
+
+##############################################
+# ALL BIOLOGICAL CORRECTIONS ADDRESSED       # 
+# NOW HAVE BEST AVAILABLE DATA ACCORDING TO  #
+# NATIONAL DATA PROVIDERS ACROSS ALL SURVEYS #
+##############################################
+# Some extra things I've come across that needs fixing
+
+
+
