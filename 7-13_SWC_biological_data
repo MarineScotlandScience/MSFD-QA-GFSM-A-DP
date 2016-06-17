@@ -1,0 +1,940 @@
+###################
+# Version Control #
+###################
+# R version 3.2.2 (2015-08-14): Fire Safety 
+# platform       x86_64-w64-mingw32 (64-bit)
+###############
+# Script Info #
+###############
+# Script 7.13
+# We now correct the biological data for each of the surveys individually
+# I have done as much as possible on a global bases and now must work on a
+# survey by survey bases do do Knn species and length assignments
+
+# AUTHOR: Meadhbh Moriarty, 2016
+# REVIEWED BY: 
+
+# 13.SWC-IBTS -done
+sco<-subset(alldata1, Survey=="SWC-IBTS ", )
+lofa_sco<-subset(sco, is.na(estrank),)
+levels(as.factor(lofa_sco$new_valid_name))
+# right - lets look at finalizing at least one survey today!
+wsco<-subset(alldata1, Survey=="SWC-IBTS",)
+lofa_sco<-subset(wsco, is.na(estrank),)
+levels(as.factor(wsco$new_valid_name))
+wsco$new_valid_name<-as.factor(wsco$new_valid_name)
+# Use Knn to resove the following 
+# "Gaidropsarus" 
+# "Labridae"     
+# "Myctophidae" 
+# "Phycidae"     
+# "Triglidae" 
+
+# lotid fishes
+################################
+find<-subset(wsco, genus=="Gaidropsarus",)
+png(filename="SWC_knn_assignment_lotids1_6-6-2016.png")
+ggplot(find, aes(x=Use_Lenght_cm1, y=HLNoAtLngtkm2,
+                 colour=new_valid_name, group=new_valid_name)) +
+  geom_jitter() +
+  ggtitle("Lenght distribution of Lotid (SWC)")+
+  theme_classic()
+
+dev.off()
+summary<-ddply(find,
+                   c("new_valid_name", "rank", 
+                      "Use_Lenght_cm1"),
+                   summarise,
+                   totalnopofsamples=sum(as.numeric(HLNoAtLngtkm2)))
+means<-ddply(summary,c("new_valid_name", "rank"),
+                summarise, 
+                mean=mean(Use_Lenght_cm1, na.rm=TRUE),
+                sd=sd(Use_Lenght_cm1, na.rm=TRUE))
+
+# Overlaid histograms with means    
+png(filename="SWC_knn_assignment_lotids2_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, y=totalnopofsamples,
+                        colour=new_valid_name, group=new_valid_name,
+                        fill=new_valid_name)) +
+  #geom_jitter() +
+  geom_histogram(binwidth=1, alpha=.5, 
+                 position="dodge", stat="identity") +
+  ggtitle("Lenght distribution of Lotid (SWC)")+
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Density plots with means
+png(filename="SWC_knn_assignment_lotids3_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) +
+  geom_density() +
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Split by species
+# With mean lines, using cdat from above
+png(filename="SWC_knn_assignment_lotids4_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) + 
+  geom_density()  + 
+  facet_grid(new_valid_name ~ .) +
+    theme_classic()
+dev.off()
+# After Lenght has been explored, plot distributions  
+# New BaseMap
+
+######################
+# plot spatial distribution of samples
+cols<-c("red", "green", "blue")
+plot(bm)
+plot(find$ShootLong,find$ShootLat,col="black",
+     bg=cols[find$new_valid_name], pch=21)
+#################
+# Predict which species a fish is based on given parameters
+# length, StatRec, Year etc
+set.seed(9850)
+
+str(find)
+find$new_valid_name<-as.factor(find$new_valid_name)
+summary(find$new_valid_name)
+list<-c("Gaidropsarusmacrophthalmus", "Gaidropsarusvulgaris")
+knn_dat<-subset(find, new_valid_name%in%list &
+                !is.na(find$lenght_Norm ) ,
+                 select= c(New_UniqueID,new_valid_name,q_Norm,
+                           year_Norm,lat_Norm,long_Norm,
+                           numbers_Norm,lenght_Norm))
+
+
+str(knn_dat)
+summary(knn_dat)
+178/10
+# training data
+178-20
+train<- knn_dat[1:158, 3:8]
+test<- knn_dat[159:178,3:8]
+train_target<- knn_dat[1:158,2 ]
+test_target<- knn_dat[157:178,2 ]
+require(class)
+sqrt(178)
+summary(train_target)
+summary(test_target)
+
+m1<-knn(train, test, 
+        cl=train_target, k=14)
+
+t1<-(table(droplevels(test_target, m1)))
+
+# happy with how this is working - so lets add the new test data
+# the fish that are not identified to species level
+# and use all the data available to train the model
+
+knn_dat_target<-subset(find, !new_valid_name%in%list &
+                  !is.na(find$lenght_Norm ) ,
+                select= c(New_UniqueID,new_valid_name,q_Norm,
+                          year_Norm,lat_Norm,long_Norm,
+                          numbers_Norm,lenght_Norm))
+
+# training data
+train<- knn_dat[1:178, 3:8]
+test<- knn_dat_target[1:2,3:8]
+train_target<- knn_dat[1:178,2 ]
+test_target<- knn_dat_target[1:2,2 ]
+
+m2<-knn(train, test, 
+            cl=train_target, k=14)
+summary(droplevels(m2))
+
+t2<-(table(droplevels(test_target, m1)))
+t2
+# Knn predicts Gaidropsarusvulgaris 
+wsco$estsciname[wsco$new_valid_name=="Gaidropsarus"]<-"Gaidropsarusvulgaris"
+wsco$estrank[wsco$new_valid_name=="Gaidropsarus"]<-"Species"
+wsco$estAphia_Code[wsco$estsciname=="Gaidropsarusvulgaris"]<-126458
+wsco$SpeciesQualityCode[wsco$new_valid_name=="Gaidropsarus"]<-"KNN_spp_assignment"
+####################################
+# Use Knn to resove "Labridae"     
+# Wrasse fishes
+
+find<-subset(wsco, family=="Labridae",)
+################################
+png(filename="SWC_knn_assignment_Wrasse1_6-6-2016.png")
+ggplot(find, aes(x=Use_Lenght_cm1, y=HLNoAtLngtkm2,
+                 colour=new_valid_name, group=new_valid_name)) +
+  geom_jitter() +
+  ggtitle("Lenght distribution of Wrasse (SWC)")+
+  theme_classic()
+
+dev.off()
+summary<-ddply(find,
+               c("new_valid_name", "rank", 
+                 "Use_Lenght_cm1"),
+               summarise,
+               totalnopofsamples=sum(as.numeric(HLNoAtLngtkm2)))
+means<-ddply(summary,c("new_valid_name", "rank"),
+             summarise, 
+             mean=mean(Use_Lenght_cm1, na.rm=TRUE),
+             sd=sd(Use_Lenght_cm1, na.rm=TRUE))
+
+# Overlaid histograms with means    
+png(filename="SWC_knn_assignment_Wrasse2_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, y=totalnopofsamples,
+                    colour=new_valid_name, group=new_valid_name,
+                    fill=new_valid_name)) +
+  #geom_jitter() +
+  geom_histogram(binwidth=1, alpha=.5, 
+                 position="dodge", stat="identity") +
+  ggtitle("Lenght distribution of Wrasse (SWC)")+
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Density plots with means
+png(filename="SWC_knn_assignment_Wrasse3_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) +
+  geom_density() +
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Split by species
+# With mean lines, using cdat from above
+png(filename="SWC_knn_assignment_Wrasse4_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) + 
+  geom_density()  + 
+  facet_grid(new_valid_name ~ .) +
+  theme_classic()
+dev.off()
+# After Lenght has been explored, plot distributions  
+# New BaseMap
+
+######################
+# plot spatial distribution of samples
+cols<-c("red", "green", "blue", "yellow")
+plot(bm)
+plot(find$ShootLong,find$ShootLat,col="black",
+     bg=cols[as.factor(find$new_valid_name)], pch=21)
+#################
+# Predict which species a fish is based on given parameters
+# length, StatRec, Year etc
+set.seed(9850)
+
+str(find)
+find$new_valid_name<-as.factor(find$new_valid_name)
+summary(find$new_valid_name)
+list<-c("Ctenolabrusrupestris", "Labrusbergylta", "Labrusmixtus")
+knn_dat<-subset(find, new_valid_name%in%list &
+                  !is.na(find$lenght_Norm ) ,
+                select= c(New_UniqueID,new_valid_name,q_Norm,
+                          year_Norm,lat_Norm,long_Norm,
+                          numbers_Norm,lenght_Norm))
+
+
+str(knn_dat)
+summary(knn_dat)
+129/10
+# training data
+129-15
+train<- knn_dat[1:114, 3:8]
+test<- knn_dat[115:129,3:8]
+train_target<- knn_dat[1:114,2 ]
+test_target<- knn_dat[115:129,2 ]
+require(class)
+sqrt(129)
+summary(train_target)
+summary(test_target)
+
+m1<-knn(train, test, 
+        cl=train_target, k=12)
+
+t1<-(table(droplevels(test_target, m1)))
+
+# happy with how this is working - so lets add the new test data
+# the fish that are not identified to species level
+# and use all the data available to train the model
+
+knn_dat_target<-subset(find, !new_valid_name%in%list &
+                         !is.na(find$lenght_Norm ) ,
+                       select= c(New_UniqueID,new_valid_name,q_Norm,
+                                 year_Norm,lat_Norm,long_Norm,
+                                 numbers_Norm,lenght_Norm))
+
+# training data
+train<- knn_dat[1:129, 3:8]
+test<- knn_dat_target[1:3,3:8]
+train_target<- knn_dat[1:129,2 ]
+test_target<- knn_dat_target[1:3,2 ]
+
+m2<-knn(train, test, 
+        cl=train_target, k=12)
+summary(droplevels(m2))
+
+t2<-(table(droplevels(test_target, m1)))
+t2
+# Knn predicts Labrusmixtus 
+wsco$estsciname[wsco$new_valid_name=="Labridae"]<-"Labrusmixtus"
+wsco$estrank[wsco$new_valid_name=="Labridae"]<-"Species"
+
+wsco$estAphia_Code[wsco$estsciname=="Labrusmixtus"]<-151501
+wsco$SpeciesQualityCode[wsco$new_valid_name=="Labridae"]<-"KNN_spp_assignment"
+####################################
+
+####################################
+# Use Knn to resove "Myctophidae"     
+# Lanternfish 
+find<-subset(wsco, family=="Myctophidae",)
+################################
+png(filename="SWC_knn_assignment_Lanternfish1_6-6-2016.png")
+ggplot(find, aes(x=Use_Lenght_cm1, y=HLNoAtLngtkm2,
+                 colour=new_valid_name, group=new_valid_name)) +
+  geom_jitter() +
+  ggtitle("Lenght distribution of Lanternfish (SWC)")+
+  theme_classic()
+
+dev.off()
+summary<-ddply(find,
+               c("new_valid_name", "rank", 
+                 "Use_Lenght_cm1"),
+               summarise,
+               totalnopofsamples=sum(as.numeric(HLNoAtLngtkm2)))
+means<-ddply(summary,c("new_valid_name", "rank"),
+             summarise, 
+             mean=mean(Use_Lenght_cm1, na.rm=TRUE),
+             sd=sd(Use_Lenght_cm1, na.rm=TRUE))
+
+# Overlaid histograms with means    
+png(filename="SWC_knn_assignment_Lanternfish2_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, y=totalnopofsamples,
+                    colour=new_valid_name, group=new_valid_name,
+                    fill=new_valid_name)) +
+  #geom_jitter() +
+  geom_histogram(binwidth=1, alpha=.5, 
+                 position="dodge", stat="identity") +
+  ggtitle("Lenght distribution of Lanternfish (SWC)")+
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Density plots with means
+png(filename="SWC_knn_assignment_Lanternfish3_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) +
+  geom_density() +
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Split by species
+# With mean lines, using cdat from above
+png(filename="SWC_knn_assignment_Lanternfish4_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) + 
+  geom_density()  + 
+  facet_grid(new_valid_name ~ .) +
+  theme_classic()
+dev.off()
+# KNN not approperiate in this data set only one species in this dataset
+# Knn predicts Labrusmixtus 
+wsco$estsciname[wsco$new_valid_name=="Myctophidae"]<-"Myctophumpunctatum"
+wsco$estrank[wsco$new_valid_name=="Myctophidae"]<-"Species"
+
+wsco$estAphia_Code[wsco$estsciname=="Myctophumpunctatum"]<-126627
+wsco$SpeciesQualityCode[wsco$new_valid_name=="Myctophidae"]<-"Genus_to_spp"
+####################################
+####################################
+# Use Knn to resove "Phycidae"     
+# hakes 
+find<-subset(wsco, family=="Phycidae",)
+################################
+png(filename="SWC_knn_assignment_hakes1_6-6-2016.png")
+ggplot(find, aes(x=Use_Lenght_cm1, y=HLNoAtLngtkm2,
+                 colour=new_valid_name, group=new_valid_name)) +
+  geom_jitter() +
+  ggtitle("Lenght distribution of hakes (SWC)")+
+  theme_classic()
+dev.off()
+summary<-ddply(find,
+               c("new_valid_name", "rank", 
+                 "Use_Lenght_cm1"),
+               summarise,
+               totalnopofsamples=sum(as.numeric(HLNoAtLngtkm2)))
+means<-ddply(summary,c("new_valid_name", "rank"),
+             summarise, 
+             mean=mean(Use_Lenght_cm1, na.rm=TRUE),
+             sd=sd(Use_Lenght_cm1, na.rm=TRUE))
+
+# Overlaid histograms with means    
+png(filename="SWC_knn_assignment_hakes2_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, y=totalnopofsamples,
+                    colour=new_valid_name, group=new_valid_name,
+                    fill=new_valid_name)) +
+  #geom_jitter() +
+  geom_histogram(binwidth=1, alpha=.5, 
+                 position="dodge", stat="identity") +
+  ggtitle("Lenght distribution of hakes (SWC)")+
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Density plots with means
+png(filename="SWC_knn_assignment_hakes3_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) +
+  geom_density() +
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Split by species
+# With mean lines, using cdat from above
+png(filename="SWC_knn_assignment_hakes4_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) + 
+  geom_density()  + 
+  facet_grid(new_valid_name ~ .) +
+  theme_classic()
+dev.off()
+# After Lenght has been explored, plot distributions  
+
+str(find)
+find$new_valid_name<-as.factor(find$new_valid_name)
+summary(droplevels(find$new_valid_name))
+
+# Knn not used only one species in survey data
+wsco$estsciname[wsco$new_valid_name=="Phycidae"]<-"Phycisblennoides"
+wsco$estrank[wsco$new_valid_name=="Phycidae"]<-"Species"
+
+wsco$estAphia_Code[wsco$estsciname=="Phycisblennoides"]<-126501
+wsco$SpeciesQualityCode[wsco$new_valid_name=="Phycidae"]<-"Genus_to_spp"
+####################################
+
+####################################
+# Use Knn to resove "Triglidae"     
+# gurnard 
+find<-subset(wsco, family=="Triglidae",)
+################################
+png(filename="SWC_knn_assignment_gurnard1_6-6-2016.png")
+ggplot(find, aes(x=Use_Lenght_cm1, y=HLNoAtLngtkm2,
+                 colour=new_valid_name, group=new_valid_name)) +
+  geom_jitter() +
+  ggtitle("Lenght distribution of gurnard (SWC)")+
+  theme_classic()
+
+dev.off()
+summary<-ddply(find,
+               c("new_valid_name", "rank", 
+                 "Use_Lenght_cm1"),
+               summarise,
+               totalnopofsamples=sum(as.numeric(HLNoAtLngtkm2)))
+means<-ddply(summary,c("new_valid_name", "rank"),
+             summarise, 
+             mean=mean(Use_Lenght_cm1, na.rm=TRUE),
+             sd=sd(Use_Lenght_cm1, na.rm=TRUE))
+
+# Overlaid histograms with means    
+png(filename="SWC_knn_assignment_gurnard2_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, y=totalnopofsamples,
+                    colour=new_valid_name, group=new_valid_name,
+                    fill=new_valid_name)) +
+  #geom_jitter() +
+  geom_histogram(binwidth=1, alpha=.5, 
+                 position="dodge", stat="identity") +
+  ggtitle("Lenght distribution of gurnard (SWC)")+
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Density plots with means
+png(filename="SWC_knn_assignment_gurnard3_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) +
+  geom_density() +
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Split by species
+# With mean lines, using cdat from above
+png(filename="SWC_knn_assignment_gurnard4_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) + 
+  geom_density()  + 
+  facet_grid(new_valid_name ~ .) +
+  theme_classic()
+dev.off()
+# After Lenght has been explored, plot distributions  
+# New BaseMap
+######################
+# plot spatial distribution of samples
+cols<-c("red", "green", "blue", "yellow")
+par(mfrow = c(1, 1))
+plot(bm)
+plot(find$ShootLong,find$ShootLat,col="black",
+     bg=cols[as.factor(find$new_valid_name)], pch=21)
+#################
+# Predict which species a fish is based on given parameters
+# length, StatRec, Year etc
+set.seed(9850)
+
+str(find)
+find$new_valid_name<-as.factor(find$new_valid_name)
+summary(droplevels(find$new_valid_name))
+list<-c("Chelidonichthyscuculus", "Chelidonichthyslucerna", "Eutriglagurnardus",
+        "Triglalyra", "Trigloporuslastoviza")
+knn_dat<-subset(find, new_valid_name%in%list &
+                  !is.na(find$lenght_Norm ) ,
+                select= c(New_UniqueID,new_valid_name,q_Norm,
+                          year_Norm,lat_Norm,long_Norm,
+                          numbers_Norm,lenght_Norm))
+
+
+str(knn_dat)
+summary(knn_dat)
+39696/10
+# training data
+39696-3970
+train<- knn_dat[1:35726, 3:8]
+test<- knn_dat[35727:39696,3:8]
+train_target<- knn_dat[1:35726,2 ]
+test_target<- knn_dat[35727:39696,2 ]
+require(class)
+sqrt(39696)
+summary(train_target)
+summary(test_target)
+
+m1<-knn(train, test, 
+        cl=train_target, k=200)
+
+t1<-(table(droplevels(test_target, m1)))
+
+# happy with how this is working - so lets add the new test data
+# the fish that are not identified to species level
+# and use all the data available to train the model
+
+knn_dat_target<-subset(find, !new_valid_name%in%list &
+                         !is.na(find$lenght_Norm ) ,
+                       select= c(New_UniqueID,new_valid_name,q_Norm,
+                                 year_Norm,lat_Norm,long_Norm,
+                                 numbers_Norm,lenght_Norm))
+
+# training data
+train<- knn_dat[1:39696, 3:8]
+test<- knn_dat_target[1:1,3:8]
+train_target<- knn_dat[1:39696,2 ]
+test_target<- knn_dat_target[1:1,2 ]
+
+m2<-knn(train, test, 
+        cl=train_target, k=12)
+summary(droplevels(m2))
+
+t2<-(table(droplevels(test_target, m1)))
+t2
+
+
+# Knn predicts Eutriglagurnardus 
+wsco$estsciname[wsco$new_valid_name=="Triglidae"]<-"Eutriglagurnardus"
+wsco$estrank[wsco$new_valid_name=="Triglidae"]<-"Species"
+
+wsco$estAphia_Code[wsco$estsciname=="Eutriglagurnardus"]<-150637
+wsco$SpeciesQualityCode[wsco$new_valid_name=="Triglidae"]<-"KNN_spp_assignment"
+####################################
+# Recheck Lmax with new fishes names
+testsco<-wsco
+names(maxdata)
+maxdata$estAphia_Code<-maxdata$valid_AphiaID
+maxdata$valid_AphiaID<-NULL
+maxdata$Aphia_Code<-NULL
+testsco$LmaxFB<-NULL
+testsco$WoRMSacceptedScientificNa<-NULL
+testsco$Aphia_Code<-NULL
+testsco<-join(testsco, maxdata, by="estAphia_Code")
+
+test1 <- testsco[ which(testsco$Use_Lenght_cm1 > testsco$LmaxFB*1.1),]
+test2 <- testsco[ which(testsco$Use_Lenght_cm1 > testsco$LmaxFB*1.4),]
+# no need for concern here!
+
+summary(as.factor(testsco$SpecVal))
+# 3 observations have no length measurements - only total number
+# Use a KNN classification to find an approperiate lenght of fish
+no_lenght<-subset(testsco, SpecVal==4,)
+summary(as.factor(no_lenght$estsciname))
+
+# 1. Cetorhinusmaximus no of fish 4
+# no other information on basking shark within this dataset - will ask DP
+# for more info
+find<-subset(wsco, New_UniqueID=="SWC-IBTS/2015/1/SCO3/87/GOV",)
+# haul was valid and there are 124 observations in it
+# need estimated lenght for the basking sharks
+# no lenght was recorded as the priority was to save the sharks and get them
+# back into the water ASAP
+# after speaking with SIC Jim Drury we have discovered that
+# these are brown shrip not basking sharks - remove record
+wsco<-subset(wsco, !estsciname=="Cetorhinusmaximus",)
+
+############
+## get a lenght for the John Dory.
+
+find<-subset(wsco, estsciname=="Zeusfaber",)
+knn_len<-subset(find, !is.na(find$lenght_Norm ),
+                       select= c(New_UniqueID,new_valid_name,q_Norm,
+                                 year_Norm,lat_Norm,long_Norm,
+                                 numbers_Norm,lenght_Norm))
+
+
+
+png(filename="SWC_knn_assignment_John Dory1_6-6-2016.png")
+ggplot(find, aes(x=Use_Lenght_cm1, y=HLNoAtLngtkm2,
+                 colour=new_valid_name, group=new_valid_name)) +
+  geom_jitter() +
+  ggtitle("Lenght distribution of John Dory (SWC)")+
+  theme_classic()
+
+dev.off()
+summary<-ddply(find,
+               c("new_valid_name", "rank", 
+                 "Use_Lenght_cm1"),
+               summarise,
+               totalnopofsamples=sum(as.numeric(HLNoAtLngtkm2)))
+means<-ddply(summary,c("new_valid_name", "rank"),
+             summarise, 
+             mean=mean(Use_Lenght_cm1, na.rm=TRUE),
+             sd=sd(Use_Lenght_cm1, na.rm=TRUE))
+
+# Overlaid histograms with means    
+png(filename="SWC_knn_assignment_John Dory2_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, y=totalnopofsamples,
+                    colour=new_valid_name, group=new_valid_name,
+                    fill=new_valid_name)) +
+  #geom_jitter() +
+  geom_histogram(binwidth=1, alpha=.5, 
+                 position="dodge", stat="identity") +
+  ggtitle("Lenght distribution of John Dory (SWC)")+
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Density plots with means
+png(filename="SWC_knn_assignment_John Dory3_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) +
+  geom_density() +
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Split by species
+# With mean lines, using cdat from above
+png(filename="SWC_knn_assignment_John Dory4_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) + 
+  geom_density()  + 
+  facet_grid(new_valid_name ~ .) +
+  theme_classic()
+dev.off()
+#################
+# Predict which lenght a fish is based on given parameters
+# abundance, Quarter, Year etc
+set.seed(9850)
+
+str(find)
+knn_dat<-subset(find, !is.na(find$lenght_Norm ) ,
+                select= c(New_UniqueID,new_valid_name,q_Norm,
+                          year_Norm,lat_Norm,long_Norm,
+                          numbers_Norm,lenght_Norm))
+
+
+str(knn_dat)
+summary(knn_dat)
+3195/10
+# training data
+3195-320
+train<- knn_dat[1:2875, 3:7]
+test<- knn_dat[2876:3195,3:7]
+train_target<- knn_dat[1:2875,8 ]
+test_target<- knn_dat[2876:3195,8 ]
+require(class)
+sqrt(3195)
+summary(train_target)
+summary(test_target)
+
+m1<-knn(train, test, 
+        cl=train_target, k=60)
+
+t1<-(table(test_target, m1))
+
+# happy with how this is working - so lets add the new test data
+# the fish that are not identified to species level
+# and use all the data available to train the model
+
+knn_dat_target<-subset(find, is.na(find$lenght_Norm) ,
+                       select= c(New_UniqueID,new_valid_name,q_Norm,
+                                 year_Norm,lat_Norm,long_Norm,
+                                 numbers_Norm,lenght_Norm))
+
+# training data
+train<- knn_dat[1:3195, 3:6]
+test<- knn_dat_target[1:1,3:6]
+train_target<- knn_dat[1:3195,8 ]
+test_target<- knn_dat_target[1:1,8 ]
+
+m2<-knn(train, test, 
+        cl=train_target, k=12)
+summary(droplevels(m2))
+
+t2<-(table(droplevels(test_target, m1)))
+t2
+find<-subset(alldata1, lenght_Norm==0.102486355366889,)
+# this is 34 cm
+# Knn predicts 34cm fish
+wsco$Use_Lenght_cm1[wsco$estsciname=="Zeusfaber"
+                    &is.na(wsco$Use_Lenght_cm)]<-34
+
+wsco$QC_Length[wsco$estsciname=="Zeusfaber"
+               &is.na(wsco$Use_Lenght_cm)]<-"KNN_len_assignment"
+
+############
+# 2. Gobiidae no of fish 2
+names(wsco)
+
+## get a lenght for the John Dory.
+
+find<-subset(wsco, estsciname=="Gobiidae",)
+knn_len<-subset(find, !is.na(find$lenght_Norm ),
+                select= c(New_UniqueID,new_valid_name,q_Norm,
+                          year_Norm,lat_Norm,long_Norm,
+                          numbers_Norm,lenght_Norm))
+
+
+
+png(filename="SWC_knn_assignment_gobies1_6-6-2016.png")
+ggplot(find, aes(x=Use_Lenght_cm1, y=HLNoAtLngtkm2,
+                 colour=new_valid_name, group=new_valid_name)) +
+  geom_jitter() +
+  ggtitle("Lenght distribution of gobies (SWC)")+
+  theme_classic()
+
+dev.off()
+summary<-ddply(find,
+               c("new_valid_name", "rank", 
+                 "Use_Lenght_cm1"),
+               summarise,
+               totalnopofsamples=sum(as.numeric(HLNoAtLngtkm2)))
+means<-ddply(summary,c("new_valid_name", "rank"),
+             summarise, 
+             mean=mean(Use_Lenght_cm1, na.rm=TRUE),
+             sd=sd(Use_Lenght_cm1, na.rm=TRUE))
+
+# Overlaid histograms with means    
+png(filename="SWC_knn_assignment_gobies2_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, y=totalnopofsamples,
+                    colour=new_valid_name, group=new_valid_name,
+                    fill=new_valid_name)) +
+  #geom_jitter() +
+  geom_histogram(binwidth=1, alpha=.5, 
+                 position="dodge", stat="identity") +
+  ggtitle("Lenght distribution of gobies(SWC)")+
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Density plots with means
+png(filename="SWC_knn_assignment_gobies3_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) +
+  geom_density() +
+  geom_vline(data=means, aes(xintercept=mean,  colour=new_valid_name),
+             linetype="dashed", size=1)+
+  theme_classic()
+dev.off()
+# Split by species
+# With mean lines, using cdat from above
+png(filename="SWC_knn_assignment_gobies4_6-6-2016.png")
+ggplot(summary, aes(x=Use_Lenght_cm1, colour=new_valid_name)) + 
+  geom_density()  + 
+  facet_grid(new_valid_name ~ .) +
+  theme_classic()
+dev.off()
+
+
+#################
+# Predict which lenght a fish is based on given parameters
+# abundance, Quarter, Year etc
+set.seed(9850)
+
+str(find)
+knn_dat<-subset(find, !is.na(find$lenght_Norm ) ,
+                select= c(New_UniqueID,new_valid_name,q_Norm,
+                          year_Norm,lat_Norm,long_Norm,
+                          numbers_Norm,lenght_Norm))
+
+
+str(knn_dat)
+summary(knn_dat)
+772/10
+# training data
+772-77
+train<- knn_dat[1:695, 3:7]
+test<- knn_dat[696:772,3:7]
+train_target<- knn_dat[1:695,8 ]
+test_target<- knn_dat[696:772,8 ]
+require(class)
+sqrt(772)
+summary(train_target)
+summary(test_target)
+
+m1<-knn(train, test, 
+        cl=train_target, k=28)
+
+t1<-(table(test_target, m1))
+
+# happy with how this is working - so lets add the new test data
+# the fish that are not identified to species level
+# and use all the data available to train the model
+
+knn_dat_target<-subset(find, is.na(find$lenght_Norm) ,
+                       select= c(New_UniqueID,new_valid_name,q_Norm,
+                                 year_Norm,lat_Norm,long_Norm,
+                                 numbers_Norm,lenght_Norm))
+
+# training data
+train<- knn_dat[1:772, 3:6]
+test<- knn_dat_target[1:1,3:6]
+train_target<- knn_dat[1:772,8 ]
+test_target<- knn_dat_target[1:1,8 ]
+
+m2<-knn(train, test, 
+        cl=train_target, k=12)
+summary(droplevels(m2))
+
+find<-subset(alldata1, lenght_Norm==0.0115221346270467,)
+# this is 4 cm
+# Knn predicts 4cm fish
+wsco$Use_Lenght_cm1[wsco$estsciname=="Gobiidae"
+                    &is.na(wsco$Use_Lenght_cm)]<-4
+
+wsco$QC_Length[wsco$estsciname=="Gobiidae"
+               &is.na(wsco$Use_Lenght_cm)]<-"KNN_len_assignment"
+
+##############
+wsco$SweptArea_wing_km_sqrd<-wsco$SweptArea_wing_km_sqrd/1000
+summary(wsco$SweptArea_wing_km_sqrd)
+summary(wsco$Use_Lenght_cm1)
+summary(wsco$HLNoAtLngt)
+summary(wsco$NewHLNoAtLngt)
+wsco$NewHLNoAtLngt[is.na(wsco$NewHLNoAtLngt)]<-wsco$NewTotalNo[is.na(wsco$NewHLNoAtLngt)]
+# now use the new numbers at lenght to get densities
+names(spp)
+wsco<-as.data.table(wsco)
+wsco$SweptArea_wing_km_sqrd<-as.numeric(wsco$SweptArea_wing_km_sqrd)
+
+wsco[!is.na(NewHLNoAtLngt), c("HLNoAtLngtkm2") :=
+      list(NewHLNoAtLngt/SweptArea_wing_km_sqrd)] 
+### getting closer to the end now,
+# need to tidy up the output file
+names(traits)
+names(wsco)
+link<-subset(traits,
+             select=c( "Aphia_Code", "LWRa","LWRb",
+                       "LWRSource"))               
+link$estAphia_Code<-link$Aphia_Code
+link$Aphia_Code<-NULL
+wsco<-as.data.frame(wsco)
+wsco$estAphia_Code[wsco$estsciname=="Triglalyra"]<-127266
+wsco$estAphia_Code[wsco$estsciname=="Congerconger"]<-126285
+all_wsco<-merge(wsco, link,  by="estAphia_Code", all.x=T)
+# find all records with no LWR
+find<-subset(all_wsco, is.na(LWRa),)
+summary(as.factor(find$estsciname))
+
+# Gadiculusthori Bayesian length-weight: a=0.00851 (0.00446 - 0.01623), 
+# b=3.08 (2.91 - 3.25), 
+# based on LWR estimates for this Family-body shape (Ref. 93245). Fishbase.
+all_wsco$LWRa[all_wsco$estsciname=="Gadiculusthori"]<-0.00851
+all_wsco$LWRb[all_wsco$estsciname=="Gadiculusthori"]<-3.08
+
+# Ammodytes marinus a= 1.70E-03	b= 3.21
+# Ammodytes tobianus a= 3.30E-03	b= 2.91
+exp(mean(log(1.70E-03+3.30E-03)))
+(3.21+2.91)/2
+all_wsco$LWRa[all_wsco$estsciname=="Ammodytes"]<-0.005
+all_wsco$LWRb[all_wsco$estsciname=="Ammodytes"]<-3.06
+
+# Hyperoplus immaculatus a= (0.00306+0.00236)/2 b= 3
+# Hyperoplus lanceolatus 3.40E-03	2.93
+exp(mean(log(0.00271+3.40E-03)))
+(3+2.93)/2
+all_wsco$LWRa[all_wsco$estsciname=="Hyperoplus"]<-0.00611
+all_wsco$LWRb[all_wsco$estsciname=="Hyperoplus"]<-2.965
+
+#Entelurusaequoreus .00022 b= 3
+all_wsco$LWRa[all_wsco$estsciname=="Entelurusaequoreus"]<-.00022
+all_wsco$LWRb[all_wsco$estsciname=="Entelurusaequoreus"]<-3
+# Gobiidae
+#Aphia minuta 8.00E-04	3.53
+#Crystallogobius linearis 0.01	2.94
+#Deltentosteus quadrimaculatus 0.01	3.21
+#Gobius cobitis 0.01	3.11
+#Gobius gasteveni 0.01	3.05
+#Gobius niger 0.01	3.03
+#Gobius paganellus 0.01	3.1
+#Lesueurigobius friesii 0.01	3.04
+#Lesueurigobius sanzi 0.01	3.12
+#Pomatoschistus lozanoi 0.01	3.04
+#Pomatoschistus microps 0.01	3.18
+#Pomatoschistus minutus 0.01	3.22
+#Pomatoschistus pictus 0.01	3.19
+exp(mean(log(8.00E-04+0.01+0.01+0.01+0.01+0.01+0.01+0.01+0.01+0.01+0.01+0.01+0.01)))
+(3.53+2.94+3.21+3.11+3.05+3.03+3.1+3.04+3.12+3.04+3.18+3.22+3.19)/13
+all_wsco$LWRa[all_wsco$estsciname=="Gobiidae"]<-0.00611
+all_wsco$LWRb[all_wsco$estsciname=="Gobiidae"]<-3.135385
+
+# Hexanchusgriseus 0.01350 3
+
+all_wsco$LWRa[all_wsco$estsciname=="Hexanchusgriseus"]<-0.01350
+all_wsco$LWRb[all_wsco$estsciname=="Hexanchusgriseus"]<-3
+
+#Stomiasboaferox Bayesian length-weight: a=0.00229 (0.00093 - 0.00562), b=3.16 (2.94 - 3.38), 
+#based on LWR estimates for this (Sub)family-body shape (Ref. 93245).
+all_wsco$LWRa[all_wsco$estsciname=="Stomiasboaferox"]<-0.00229
+all_wsco$LWRb[all_wsco$estsciname=="Stomiasboaferox"]<-3.16 
+
+
+# Argyropelecus hemigymnus 
+# Bayesian length-weight: a=0.01820 (0.00683 - 0.04845), b=3.00 (2.77 - 3.23), 
+# based on LWR estimates for this (Sub)family-body shape (Ref. 93245).
+
+all_wsco$LWRa[all_wsco$estsciname=="Argyropelecushemigymnus"]<-0.01820
+all_wsco$LWRb[all_wsco$estsciname=="Argyropelecushemigymnus"]<-3
+
+# Micrenophryslilljeborgii Bayesian length-weight: a=0.00661 (0.00270 - 0.01615), b=3.17 (2.95 - 3.39), 
+# based on LWR estimates for this Family-body shape (Ref. 93245).
+
+all_wsco$LWRa[all_wsco$estsciname=="Micrenophryslilljeborgii"]<-0.00661
+all_wsco$LWRb[all_wsco$estsciname=="Micrenophryslilljeborgii"]<-3.17
+summary(as.factor(all_wsco$LngtCode))
+# mean lenght is needed for lenght weights  if measured in cm then +0.5
+# if measured in .5 cm then add + 0.25
+all_wsco$LngtCode[is.na(all_wsco$LngtCode)]<-1
+
+all_wsco$mean_lenght_cm[all_wsco$LngtCode=="1"]<-wsco$Use_Lenght_cm1[all_wsco$LngtCode=="1"]+.5
+all_wsco$mean_lenght_cm[all_wsco$LngtCode=="0"]<-wsco$Use_Lenght_cm1[all_wsco$LngtCode=="0"]+.25
+all_wsco$mean_lenght_cm[all_wsco$LngtCode=="."]<-wsco$Use_Lenght_cm1[all_wsco$LngtCode=="."]+.25
+all_wsco$IndivFishWgt_g<-all_wsco$LWRa*all_wsco$mean_lenght_cm^all_wsco$LWRb
+all_wsco$SpeciesSciName<-all_wsco$estsciname
+all_wsco$FishLenght_cm<-all_wsco$Use_Lenght_cm1
+all_wsco$Number<-all_wsco$NewTotalNo
+all_wsco$DensAbund_N_Sqkm<-all_wsco$HLNoAtLngtkm2
+all_wsco$DensBiom_kg_Sqkm<-(all_wsco$Number*all_wsco$IndivFishWgt_g/1000)/all_wsco$SweptArea_wing_km_sqrd
+list<-unique(all_wsco$New_UniqueID)
+
+need<-subset(h, New_UniqueID%in%list,
+             select=c(New_UniqueID,HaulID, Survey_Acronym))
+all_wsco1<-merge(need, all_wsco)
+bio_dat_scotland_west_coast <-subset(all_wsco1, 
+                 select=c(Survey_Acronym, HaulID, SpeciesSciName,
+                          FishLenght_cm, IndivFishWgt_g, Number,
+                          DensAbund_N_Sqkm, DensBiom_kg_Sqkm))
+ #"CSScoOT1"
+ CSScoOT1_LD<-subset(bio_dat_scotland_west_coast, 
+                     bio_dat_scotland_west_coast$Survey_Acronym=="CSScoOT1",)
+
+ write.csv(CSScoOT1_LD, "Bio_info_CSScoOT1_10-06-2016.csv")
+
+  #"CSScoOT4"
+
+ CSScoOT4_LD<-subset(bio_dat_scotland_west_coast, 
+                     bio_dat_scotland_west_coast$Survey_Acronym=="CSScoOT4",)
+
+  write.csv(CSScoOT4_LD, "Bio_info_CSScoOT4_10-06-2016.csv")
+  225358+277386
+  
