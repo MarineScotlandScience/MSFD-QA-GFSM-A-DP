@@ -38,14 +38,13 @@ Sys.getenv("http_proxy")
 Sys.setenv(http_proxy="http://192.168.41.8:80")
 ## this proxy is required for my system if no proxy is required use:
 # Sys.setenv(http_proxy="")
-
 ############
 # PACKAGES #
 ############
-library(devtools)
+# library(devtools) - only required to download the rICES package from github
 #citation("devtools")
 #devtools::install_github("ices-dk/rICES")
-library(rICES)
+# library(rICES) - only required if downloading directly from DATRAS
 #citation("rICES")
 library(ggplot2) #for pretty plots
 #citation("ggplot2")
@@ -59,7 +58,8 @@ library(car)
 #citation("car")
 library(DMwR) #for lofactor(..)
 #citation("DMwR")
-library(DATRAS)
+# library(DATRAS) only required if downloading from DATRAS directly - see getDATRAS
+# function if this isn't loading as required.
 #citation("DATRAS")
 library(lme4) #for mixed models
 #citation("lme4")
@@ -73,6 +73,7 @@ library(rgl)
 library(Hmisc)
 library(MuMIn)
 library(mapplots)
+library(class)
 ##################
 # Load functions #
 ##################
