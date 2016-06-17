@@ -1732,7 +1732,7 @@ summary(hauls$newDist)
 100*100
 
 hauls$SweptArea_wing_m_sqrd<-hauls$Use_WingSpread*hauls$newDist
-hauls$SweptArea_wing_km_sqrd<-hauls$SweptArea_wing_m_sqrd/1000
+hauls$SweptArea_wing_km_sqrd<-hauls$SweptArea_wing_m_sqrd/1000000
 summary(hauls$SweptArea_wing_km_sqrd)
 16.05/68.12
 16.05/0.23
