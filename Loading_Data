@@ -1,0 +1,285 @@
+###################
+# Version Control #
+###################
+# R version 3.2.2 (2015-08-14): Fire Safety 
+# platform       x86_64-w64-mingw32 (64-bit)
+###############
+# Script Info #
+###############
+# This is Script 2 of X 
+# The purpose of this script is to load the raw data into R from the various folders.
+# AUTHOR: Meadhbh Moriarty, 2016
+# REVIEWED BY: Nicola Walker (Cefas) Jonas Hentati Sundberg (SLU)
+#############
+# Load data #
+#############
+# If FALSE, mostly suppress CI computation
+need.CI <- FALSE
+# Number of bootstrap replicates
+if(need.CI){
+  nb <- 1000
+}else{
+  nb <- 3 ## just to make code run through
+}
+#
+# Confidence interval range
+CV <- .95
+# Set seed for reproducable results
+setSeed <- set.seed(627)
+###################
+# Load Saved Data #
+###################
+# As this product must be totally reproducable I have saved a copy of the 
+# DATRAS file on a given date (29/09/2016)- provided with the file in the sharepoint 
+# site associated with this product
+# Read in haul data
+HH_SWC<-read.csv("./Data/DATRAS_29-09-2016/SWC-IBTS/Exchange Data_2016-09-29 11_32_17.csv")
+HH_ROCK<-read.csv("./Data/DATRAS_29-09-2016/ROCKALL/Exchange Data_2016-09-29 11_41_07.csv")
+HH_PT<-read.csv("./Data/DATRAS_29-09-2016/PT-IBTS/Exchange Data_2016-09-29 11_57_15.csv")
+HH_NIGFS<-read.csv("./Data/DATRAS_29-09-2016/NIGFS/Exchange Data_2016-09-29 12_27_31.csv")
+HH_IGFS<-read.csv("./Data/DATRAS_29-09-2016/IE-IGFS/Exchange Data_2016-09-29 12_30_17.csv")
+HH_FRCGFS<-read.csv("./Data/DATRAS_29-09-2016/FR-CGFS/Exchange Data_2016-09-29 12_41_55.csv")
+HH_EVHOE<-read.csv("./Data/DATRAS_29-09-2016/EVHOE/Exchange Data_2016-09-29 13_05_00.csv")
+HH_BTS<-read.csv("./Data/DATRAS_29-09-2016/BTS/Exchange Data_2016-09-29 13_08_42.csv")
+HH_NSIBTS<-read.csv("./Data/DATRAS_29-09-2016/NS-IBTS/Exchange Data_2016-09-29 13_10_48.csv")
+HH_BTS7a<-read.csv("./Data/DATRAS_29-09-2016/BTS-VIIa/Exchange Data_2016-09-29 13_35_14.csv")
+# Read biological data
+HL_SWC<-read.csv("./Data/DATRAS_29-09-2016/SWC-IBTS/Exchange Data_2016-09-29 11_32_44.csv")
+HL_ROCK<-read.csv("./Data/DATRAS_29-09-2016/ROCKALL/Exchange Data_2016-09-29 11_46_50.csv")
+HL_PT<-read.csv("./Data/DATRAS_29-09-2016/PT-IBTS/Exchange Data_2016-09-29 12_17_29.csv")
+HL_NIGFS<-read.csv("./Data/DATRAS_29-09-2016/NIGFS/Exchange Data_2016-09-29 12_23_19.csv")
+HL_IGFS<-read.csv("./Data/DATRAS_29-09-2016/IE-IGFS/Exchange Data_2016-09-29 12_30_25.csv")
+HL_EVHOE<-read.csv("./Data/DATRAS_29-09-2016/EVHOE/Exchange Data_2016-09-29 12_55_25.csv")
+HL_BTS<-read.csv("./Data/DATRAS_29-09-2016/BTS/Exchange Data_2016-09-29 13_11_29.csv")
+HL_FRCGFS<-read.csv("./Data/DATRAS_29-09-2016/FR-CGFS/Exchange Data_2016-09-29 14_29_54.csv")
+HL_BTS7a<-read.csv("./Data/DATRAS_29-09-2016/BTS-VIIa/Exchange Data_2016-09-29 14_32_01.csv")
+HL_NSIBTS<-read.csv("./Data/DATRAS_29-09-2016/NS-IBTS/Exchange Data_2016-09-29 15_08_21.csv")
+###############################
+# Add national submitted data##
+###############################
+##############
+# Danish Data#
+##############
+# Add corrections of data from National Data providers
+# Denmark earliest years of survey were missing species
+NS_DEN_sp_1983<-read.csv("./Data/Corrections/DNK_IBTS1_1983_GOV.CSV", header=F)
+NS_DEN_sp_1984<-read.csv("./Data/Corrections/DNK_IBTS1_1984_GOV.CSV", header=F)
+NS_DEN_sp_1985<-read.csv("./Data/Corrections/DNK_IBTS1_1985_GOV.CSV", header=F)
+NS_DEN_sp_1986<-read.csv("./Data/Corrections/DNK_IBTS1_1986_GOV.CSV", header=F)
+#######################
+# Northern Irish Data #
+#######################
+# Northern Ireland early data not available on Datras
+NI_extra<-read.csv("./Data/National Submissions/Datras_MSFD_NI/Datras_MSFD1.csv", header=F)
+###############
+#Spanish Data #
+###############
+# Add in Spanish Data not on DATRAS
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process/Data/National Submissions/Spain_18-03-2016/HH_ARSA") # set path here
+files <- list.files()
+
+for (i in 1:length(files)){
+  
+  # if the merged dataset doesn't exist, create it
+  if (i==1){
+    dataset <- read.table(files[i], header=FALSE, sep=",")
+  } else {
+    tmp<-read.table(files[i], header=FALSE, sep=",")
+    dataset<-rbind(dataset, tmp)
+  }
+}  
+HH_ARSA<-dataset
+# then remove dataset and start again with next files
+rm(dataset)
+rm(tmp)
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process/Data/National Submissions/Spain_18-03-2016/HH_SPNGFS")
+files <- list.files()
+
+for (i in 1:length(files)){
+  
+  # if the merged dataset doesn't exist, create it
+  if (i==1){
+    dataset <- read.table(files[i], header=FALSE, sep=",")
+  } else {
+    tmp<-read.table(files[i], header=FALSE, sep=",")
+    dataset<-rbind(dataset, tmp)
+  }
+}  
+HH_SPNGFS<-dataset
+# then remove dataset and start again with next files
+rm(dataset)
+rm(tmp)
+
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process/Data/National Submissions/Spain_09-09-2016/HL_Q1_SPARSA")
+files <- list.files()
+
+for (i in 1:length(files)){
+  
+  # if the merged dataset doesn't exist, create it
+  if (i==1){
+    dataset <- read.table(files[i], header=FALSE, sep=",")
+  } else {
+    tmp<-read.table(files[i], header=FALSE, sep=",")
+    dataset<-rbind(dataset, tmp)
+  }
+}  
+HL_ARSA1<-dataset
+# then remove dataset and start again with next files
+rm(dataset)
+rm(tmp)
+
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process/Data/National Submissions/Spain_09-09-2016/HL_Q4_SPARSA")
+files <- list.files()
+
+for (i in 1:length(files)){
+  
+  # if the merged dataset doesn't exist, create it
+  if (i==1){
+    dataset <- read.table(files[i], header=FALSE, sep=",")
+  } else {
+    tmp<-read.table(files[i], header=FALSE, sep=",")
+    dataset<-rbind(dataset, tmp)
+  }
+}  
+HL_ARSA4<-dataset
+# then remove dataset and start again with next files
+rm(dataset)
+rm(tmp)
+
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process/Data/National Submissions/Spain_09-09-2016/HL_SPNGFS_0609")
+files <- list.files()
+
+for (i in 1:length(files)){
+  
+  # if the merged dataset doesn't exist, create it
+  if (i==1){
+    dataset <- read.table(files[i], header=FALSE, sep=",")
+  } else {
+    tmp<-read.table(files[i], header=FALSE, sep=",")
+    dataset<-rbind(dataset, tmp)
+  }
+}  
+HL_SPNGFS<-dataset
+# then remove dataset and start again with next files
+rm(dataset)
+rm(tmp)
+
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process/Data/National Submissions/Spain_09-09-2016/HL_SPPGFS_0609")
+files <- list.files()
+for (i in 1:length(files)){
+  
+  # if the merged dataset doesn't exist, create it
+  if (i==1){
+    dataset <- read.table(files[i], header=FALSE, sep=",")
+  } else {
+    tmp<-read.table(files[i], header=FALSE, sep=",")
+    dataset<-rbind(dataset, tmp)
+  }
+}  
+HL_SPPORC<-dataset
+# then remove dataset and start again with next files
+rm(dataset)
+rm(tmp)
+
+
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process/Data/National Submissions/Spain_18-03-2016/HH_SPPORC")
+files <- list.files()
+
+for (i in 1:length(files)){
+  
+  # if the merged dataset doesn't exist, create it
+  if (i==1){
+    dataset <- read.table(files[i], header=TRUE, sep=",")
+  } else {
+    tmp<-read.table(files[i], header=TRUE, sep=",")
+    dataset<-rbind(dataset, tmp)
+  }
+}  
+HH_SPPORC<-dataset
+# then remove dataset and start again with next files
+rm(dataset)
+rm(tmp)
+# Sort out spanish data frames so they match the others
+names(HH_SPPORC)
+names(HH_SPNGFS)<-c("RecordType", "Quarter", "Country" , "Ship" , "Gear" , 
+                    "SweepLngt", "GearExp",  "DoorType", "StNo" , "HaulNo" , "Year",
+                    "Month","Day", "TimeShot", "Stratum", "HaulDur", "DayNight", "ShootLat","ShootLong",
+                    "HaulLat", "HaulLong", "StatRec" , "Depth", "HaulVal", "HydroStNo",    "StdSpecRecCode",   "BycSpecRecCode",
+                    "DataType", "Netopening","Rigging" ,"Tickler" ,"Distance",    "Warplngt","Warpdia"  ,   "WarpDen" ,
+                    "DoorSurface",   "DoorWgt",    "DoorSpread",   "WingSpread",
+                    "Buoyancy",  "KiteDim",    "WgtGroundRope",   "TowDir",
+                    "GroundSpeed", "SpeedWater",    "SurCurDir",   "SurCurSpeed",
+                    "BotCurDir","BotCurSpeed",  "WindDir",   "WindSpeed",
+                    "SwellDir","SwellHeight",   "SurTemp",   "BotTemp",
+                    "SurSal","BotSal" , "ThermoCline",   "ThClineDepth")
+HH_SPNGFS$Survey<-"SPNGFS"
+HH_SPNGFS$DateofCalculation<-"NA"
+names(HH_ARSA)<-c("RecordType", "Quarter", "Country" , "Ship" , "Gear" , 
+                  "SweepLngt", "GearExp",  "DoorType", "StNo" , "HaulNo" , "Year",
+                  "Month"    ,         "Day"           ,    "TimeShot"     ,     "Stratum"          ,
+                  "HaulDur"   ,        "DayNight"      ,    "ShootLat"      ,    "ShootLong"        ,
+                  "HaulLat"    ,       "HaulLong"      ,    "StatRec"        ,   "Depth"            ,
+                  "HaulVal"     ,      "HydroStNo"     ,    "StdSpecRecCode" ,   "BycSpecRecCode"   ,
+                  "DataType"     ,     "Netopening"    ,    "Rigging"         ,  "Tickler"          ,
+                  "Distance"      ,    "Warplngt"      ,    "Warpdia"        ,   "WarpDen"          ,
+                  "DoorSurface"    ,   "DoorWgt"       ,    "DoorSpread"     ,   "WingSpread"       ,
+                  "Buoyancy"        ,  "KiteDim"       ,    "WgtGroundRope"  ,   "TowDir"           ,
+                  "GroundSpeed"      , "SpeedWater"    ,    "SurCurDir"      ,   "SurCurSpeed"      ,
+                  "BotCurDir"         ,"BotCurSpeed"     ,  "WindDir"        ,   "WindSpeed"        ,
+                  "SwellDir" ,         "SwellHeight"    ,   "SurTemp"        ,   "BotTemp"          ,
+                  "SurSal"    ,        "BotSal"        ,    "ThermoCline"    ,   "ThClineDepth"     )
+
+HH_ARSA$Survey<-"SP_ARSA"
+HH_ARSA$DateofCalculation<-"NA"
+summary(HL_ARSA4)
+names(HL_ARSA4)<-c("RecordType", "Quarter","Country",          
+                   "Ship", "Gear","SweepLngt", "GearExp",         
+                   "DoorType", "StNo","HaulNo","Year",        
+                   "SpecCodeType","SpecCode","SpecVal","Sex",              
+                   "TotalNo", "CatIdentifier" ,"NoMeas", "SubFactor",        
+                   "SubWgt","CatCatchWgt", "LngtCode","LngtClass" ,       
+                   "HLNoAtLngt")
+HL_ARSA4$Survey<-"SP_ARSA"
+HL_ARSA4$DateofCalculation<-"NA"
+HL_ARSA4$ValidAphiaID<-HL_ARSA4$SpecCode 
+
+summary(HL_ARSA1)
+names(HL_ARSA1)<-c("RecordType", "Quarter","Country",          
+                  "Ship", "Gear","SweepLngt", "GearExp",         
+                  "DoorType", "StNo","HaulNo","Year",        
+                  "SpecCodeType","SpecCode","SpecVal","Sex",              
+                  "TotalNo", "CatIdentifier" ,"NoMeas", "SubFactor",        
+                  "SubWgt","CatCatchWgt", "LngtCode","LngtClass" ,       
+                  "HLNoAtLngt")
+HL_ARSA1$Survey<-"SP_ARSA"
+HL_ARSA1$DateofCalculation<-"NA"
+HL_ARSA1$ValidAphiaID<-HL_ARSA1$SpecCode 
+names(HL_SPNGFS)<-c("RecordType", "Quarter","Country",          
+                    "Ship", "Gear","SweepLngt", "GearExp",         
+                    "DoorType", "StNo","HaulNo","Year",        
+                    "SpecCodeType","SpecCode","SpecVal","Sex",              
+                    "TotalNo", "CatIdentifier" ,"NoMeas", "SubFactor",        
+                    "SubWgt","CatCatchWgt", "LngtCode","LngtClass" ,       
+                    "HLNoAtLngt")
+HL_SPNGFS$Survey<-"SPNGFS"
+HL_SPNGFS$DateofCalculation<-"NA"
+HL_SPNGFS$ValidAphiaID<-HL_SPNGFS$SpecCode 
+
+names(HL_SPPORC)<-c("RecordType", "Quarter","Country",          
+                    "Ship", "Gear","SweepLngt", "GearExp",         
+                    "DoorType", "StNo","HaulNo","Year",        
+                    "SpecCodeType","SpecCode","SpecVal","Sex",              
+                    "TotalNo", "CatIdentifier" ,"NoMeas", "SubFactor",        
+                    "SubWgt","CatCatchWgt", "LngtCode","LngtClass" ,       
+                    "HLNoAtLngt")
+HL_SPPORC$Survey<-"SP_PORC"
+HL_SPPORC$DateofCalculation<-"NA"
+HL_SPPORC$ValidAphiaID<-HL_SPPORC$SpecCode 
+
+HH_SPPORC$Survey<-"SP_PORC"
+HH_SPPORC$DateofCalculation<-"NA"
+
+##########################
+# Reset Working Directory#
+##########################
+setwd("~/MSFDQAGFSMADP_V2/Data_QA_Process")
