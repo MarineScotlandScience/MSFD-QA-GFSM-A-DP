@@ -1,0 +1,155 @@
+#################################
+# Data exploration Spanish data #
+#################################
+# I'm going to look at Porc baka and the regular baka together and see can one model 
+# do both gears with reasonable results
+# subest data to look at it easier
+spain<-subset(hauls, Country=="SPA",)
+png(file = "QQ_doorspread_spain_29-09-2016.png", bg = "transparent")
+qqnorm(spain$DoorSpread, main="Normal QQ plot for DoorSpread", ylab="DoorSpread (m)")
+qqline(spain$DoorSpread, col="red")
+dev.off()
+#
+png(file = "QQ_wingspread_spain_29-09-2016.png", bg = "transparent")
+qqnorm(spain$WingSpread, main="Normal QQ plot for WingSpread", ylab="WingSpread (m)")
+qqline(spain$WingSpread, col="red")
+dev.off()
+png(file = "QQ_netopening_spain_29-09-2016.png", bg = "transparent")
+qqnorm(spain$Netopening, main="Normal QQ plot for Netopening", ylab="Netopening (m)")
+qqline(spain$Netopening, col="red")
+dev.off()
+# couple of outliers needing a closer look in netopeing
+png(file = "netopening_spain_29-09-2016.png", bg = "transparent")
+plot(spain$DepthNew, spain$Netopening, pch=19, col='grey', xlab="Depth (m)", 
+     ylab="Net Opening (m)")
+dev.off()
+# plot shows doorspread is normally distributed as the points fall close to the line
+png(file = "doorspread_spain_29-09-2016.png", bg = "transparent")
+plot(spain$DepthNew, spain$DoorSpread, pch=19, col='grey', xlab="Depth (m)", 
+     ylab="Door Spread (m)")
+dev.off()
+png(file = "wingspread_spain_29-09-2016.png", bg = "transparent")
+plot(spain$Depth, spain$WingSpread, pch=19, col='grey', xlab="Depth (m)", 
+     ylab="Wing Spread (m)")
+dev.off()
+# use a box plot to look at the effect of one variable against another, 
+png(file = "doorspread_spain_box_29-09-2016.png", bg = "transparent")
+boxplot(spain$DoorSpread~spain$Ship,
+        col="lightgray", xlab="Ship", ylab="DoorSpread (m)",
+        ylim=c(30, 150))
+dev.off()
+png(file = "wingspread_spain_box_29-09-2016.png", bg = "transparent")
+boxplot(spain$WingSpread~spain$Ship, 
+        col="lightgray", xlab="Ship", ylab="WingSpread (m)",
+        ylim=c(10, 32))
+dev.off()
+# boxplot reveals that some ships have a lower average doorspread than others, 
+# wingspreads of some ships, like are more variable than others. 
+# a clear ship effect exists - decision to include ship as factor in model 
+png(file = "doorVsweep_spain_box_29-09-2016.png", bg = "transparent")
+boxplot(spain$DoorSpread~spain$SweepLngt,
+        col="lightgray", xlab="Sweep Length (m)", ylab="DoorSpread (m)",
+        ylim=c(30, 200))
+dev.off()
+
+png(file = "wingVsweep_spain_box_29-09-2016.png", bg = "transparent")
+boxplot(spain$WingSpread~spain$SweepLngt,   col="lightgray", 
+        xlab="Sweep Length (m)", ylab="WingSpread (m)",
+        ylim=c(10, 32))
+dev.off()
+# Variation is similar to that seen in ship effect - which probably explains this better
+# Sweep Lnght has a stronger effect on DoorSpread than Wing Spread, look at 2 cats,
+# Short and Long Sweep to see if this may give sufficent explaniation of the variation
+# in the model 
+# boxplot reveals that sweep impacts on doorspread, 
+# as the sweep increases so too does the doorspread this is related to depth too!
+# this is captured by the long/ short catagories too.
+summary(as.factor(spain$Gear))
+# no Gear Exceptions in spain
+# but two different gears
+png(file = "wingVgear_spain_box_29-09-2016.png", bg = "transparent")
+boxplot(spain$WingSpread~spain$Gear, col="lightgrey", pch=19,
+        xlab="Gear", ylab="WingSpread (m)")
+dev.off()
+png(file = "doorVgear_spain_box_29-09-2016.png", bg = "transparent")
+boxplot(spain$DoorSpread~spain$Gear, col="lightgrey", pch=19,
+        xlab="Gear", ylab="Door Spread (m)")
+dev.off()
+cols<-c(rainbow(3))
+png(file="doorspreadVDepth_spain_col_29-09-2016.png", bg="transparent")
+plot(spain$Depth, spain$DoorSpread, col=cols[as.factor(spain$Gear)], pch=20)
+legend(680, 90, levels(as.factor(spain$Gear)), col=cols, 
+       pch=15, ncol=1, cex=1, bty="n")
+dev.off()
+png(file="wingspreadVDepth_spain_col_29-09-2016.png", bg="transparent")
+plot(spain$Depth, spain$WingSpread, col=cols[as.factor(spain$Gear)], pch=20)
+legend(680, 30, levels(as.factor(spain$Gear)), col=cols, 
+       pch=15, ncol=1, cex=1, bty="n")
+dev.off()
+# stations look good - Scotland may have fished with the Irish DWS in some years?
+plot3d( spain$Depth, spain$ShootLong, spain$ShootLat,  main= "Station Locations",
+        col=cols[as.factor(spain$Gear)] , pch=20)
+
+# Deeper depths look like they are in the correct places
+png(file="other_spainish_graphs_29-09-2016.png", bg="transparent")
+par(mfrow=c(2,3))
+plot(spain$WingSpread, spain$DoorSpread, col=cols[as.factor(spain$Gear)], pch=20)
+legend(1900, 160, levels(as.factor(spain$Gear)), col=cols, 
+       pch=15, ncol=1, cex=.9, bty="n")
+#Look at relationship between Warp and Door
+plot(spain$Warplngt, spain$DoorSpread, col=cols[as.factor(spain$Gear)], pch=20)
+legend(1900, 160, levels(as.factor(spain$Gear)), col=cols, 
+       pch=15, ncol=1, cex=.9, bty="n")
+# Very Similar to Depth, DoorSpread relationship
+plot(spain$Warplngt, spain$WingSpread, col=cols[as.factor(spain$Gear)], pch=20)
+legend(1900, 160, levels(as.factor(spain$Gear)), col=cols, 
+       pch=15, ncol=1, cex=.9, bty="n")
+# Very Similar to Depth, WingSpread relationship
+plot(spain$Depth,spain$Warplngt, col=cols[as.factor(spain$Gear)], pch=20)
+legend(650, 1800, levels(as.factor(spain$Gear)), col=cols, 
+       pch=15, ncol=1, cex=.9, bty="n")
+plot(spain$Netopening,spain$DoorSpread, col=cols[as.factor(spain$Gear)], pch=20, xlim=c(0,5))
+plot(spain$Netopening,spain$WingSpread, col=cols[as.factor(spain$Gear)], pch=20, xlim=c(0,5))
+legend(4, 25, levels(as.factor(spain$Gear)), col=cols, 
+       pch=15, ncol=1, cex=.9, bty="n")
+dev.off()
+# Pearson's product-moment correlation
+cor.test(spain$Warplngt,spain$Depth) # 0.9862778
+cor.test(spain$DoorSpread,spain$Depth) # 0.7596876 
+cor.test(spain$WingSpread,spain$Depth) # 0.5695914
+# Subset data to check correlations
+corhaul<-subset(spain,
+                select=c(SweepLngt, Year, Depth, 
+                         Netopening, Warplngt,
+                         DoorSpread, WingSpread))
+
+rcorr(as.matrix(corhaul), type="pearson")
+
+corrgram(corhaul, order=TRUE, lower.panel=panel.shade,
+         upper.panel=panel.pie, text.panel=panel.txt,
+         main="IBTS Haul Parameters") 
+
+corrgram(corhaul, order=TRUE, lower.panel=panel.ellipse,
+         upper.panel=panel.pts, text.panel=panel.txt,
+         diag.panel=panel.minmax,
+         main="IBTS Haul Parameters", 
+         pch=19) 
+# depth and warp are showing a positive linear relationship.
+# Corrgram shows relationsships and correlations
+
+# run a generalised linear model
+# Response Variable: DoorSpread
+# Fixed Effects: Depth, Warp Length, Wing Spread, Sweep Length, Net Opening,
+#               Ship, Ground Gear, Survey, Quarter, Year, StatRec
+# does quater account for some differences in weather patterns at each stage of the 
+# year???
+summary(as.factor(spain$Quarter))
+boxplot(spain$DoorSpread~as.factor(spain$Quarter),
+        col="lightgray", xlab="Quarter", ylab="DoorSpread (m)")
+boxplot(spain$WingSpread~as.factor(spain$Quarter),
+        col="lightgray", xlab="Quarter", ylab="DoorSpread (m)")
+# Again the quaters look different - but is this to do with the ships that are 
+# fishing or the weather?
+plot(spain$Quarter, spain$DoorSpread, col=cols[as.factor(spain$Gear)],
+     pch=19, xlim=c(1,5))
+# more likely related to gear than quarter
