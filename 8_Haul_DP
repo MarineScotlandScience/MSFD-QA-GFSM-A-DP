@@ -1,0 +1,1090 @@
+###################
+# Version Control #
+###################
+# R version 3.2.2 (2015-08-14): Fire Safety 
+# platform       x86_64-w64-mingw32 (64-bit)
+###############
+# Script Info #
+###############
+# This is Script 8 of 9 
+# The purpose of this script is to seperate the surveys and 
+# define the final data products structure for the haul files
+# Then select the Standard Survey Area using the agreed criteria 
+# AUTHOR: Meadhbh Moriarty, 2016
+# REVIEWED BY: 
+###############
+# Here we assign the column names to the values that will appear in the top end 
+# of the data product to insure transparency and it is user friendly
+h<-hauls1
+# check that the final list of hauls match in both groups
+list<-unique(h$New_UniqueID)
+list<-unique(dat8$New_UniqueID)
+
+#  Add Survey Acronyms from Data products
+# See table 2.1 in Moriarty et al (in prep) for details 
+names(h)
+summary(h$Survey)
+h$Survey_Acronym[h$Survey=="NS-IBTS"&h$Quarter=="1"]<-"GNSIntOT1"
+h$Survey_Acronym[h$Survey=="NS-IBTS"&h$Quarter=="3"]<-"GNSIntOT3"
+h$Survey_Acronym[h$Survey=="FR-CGFS"&h$Quarter=="4"]<-"GNSFraOT4"
+h$Survey_Acronym[h$Survey=="SWC-IBTS"&h$Quarter=="1"]<-"CSScoOT1"
+h$Survey_Acronym[h$Survey=="SWC-IBTS"&h$Quarter=="4"]<-"CSScoOT4"
+h$Survey_Acronym[h$Survey=="IE-IGFS"&h$Quarter=="4"]<-"CSIreOT4"
+
+h$Survey_Acronym[h$Survey=="NIGFS"&h$Quarter=="1"]<-"CSNIrOT1"
+h$Survey_Acronym[h$Survey=="NIGFS"&h$Quarter=="4"]<-"CSNIrOT4"
+h$Survey_Acronym[h$Survey=="EVHOE"&h$Quarter=="4"]<-"CSBBFraOT4"
+h$Survey_Acronym[h$Survey=="SP_ARSA"&h$Quarter=="1"]<-"BBIC(s)SpaOT1"
+h$Survey_Acronym[h$Survey=="SP_ARSA"&h$Quarter=="4"]<-"BBIC(s)SpaOT4"
+h$Survey_Acronym[h$Survey=="SPNGFS"&h$Quarter=="4"]<-"BBIC(n)SpaOT4"
+
+h$Survey_Acronym[h$Survey=="PT-IBTS"&h$Quarter=="4"]<-"BBICPorOT4"
+h$Survey_Acronym[h$Survey=="ROCKALL"&h$Quarter=="3"]<-"WAScoOT3"
+h$Survey_Acronym[h$Survey=="SP_PORC"&h$Quarter=="3"]<-"WASpaOT3"
+h$Survey_Acronym[h$Survey=="BTS"&h$Quarter=="3"&
+                   h$Country=="NED"]<-"GNSNetBT3"
+h$Survey_Acronym[h$Survey=="BTS"&h$Quarter=="3"&
+                   h$Country=="GFR"]<-"GNSGerBT3"
+h$Survey_Acronym[h$Survey=="BTS"&h$Quarter=="3"&
+                   h$Country=="ENG"]<-"GNSEngBT3"
+h$Survey_Acronym[h$Survey=="BTS-VIIa"&h$Quarter=="3"&
+                   h$Country=="ENG"]<-"CSEngBT3"
+summary(as.factor(h$Survey_Acronym))
+# add a gear type filer column
+h$GearType[h$Survey=="BTS"|h$Survey=="BTS-VIIa"]<-"BT"
+h$GearType[is.na(h$GearType)]<-"OT"
+# new haul uniqu identifer Survey Acronym/ship/year/haul No
+h$HaulID<-paste(h$Survey_Acronym,h$Ship,h$Year,h$HaulNo,sep="/")
+h$YearShot<-h$Year                
+h$MonthShot<-h$month                  
+h$DayShot<-h$Day
+#h$HourShot
+#h$MinShot
+
+h$HaulDur_min<-h$HaulDur
+h$ICESStSq<-h$check_StatRec
+h$SurvStratum<-h$Stratum
+summary(as.factor(h$SurvStratum))
+h$Depth_m<-h$DepthNew
+h$Distance_km<-h$newDist/1000
+h$WingSpread_m<-h$Use_WingSpread
+h$DoorSpread_m<-h$Use_DoorSpread
+h$NetOpen_m<-h$Use_Netopening
+summary(h$SweptArea_wing_km_sqrd)
+h$SweptArea_wing_m_sqrd<-h$Use_WingSpread*h$newDist
+h$SweptArea_wing_km_sqrd<-h$SweptArea_wing_m_sqrd/1000/1000
+h$WingSwpArea_sqkm<-h$SweptArea_wing_km_sqrd
+h$WingSwpVol_CorF<-1/(h$Use_Netopening/1000)
+h$DoorSwptArea_CorF<-(h$Use_WingSpread/1000)/(h$Use_DoorSpread/1000)
+h$DoorSwptVol_CorF<-(h$Use_WingSpread/1000)/((h$Use_DoorSpread/1000)*(h$Use_Netopening/1000))
+summary(h$WingSwpVol_CorF)
+summary(h$DoorSwptArea_CorF)
+summary(h$DoorSwptVol_CorF)
+h$ShootLat_degdec<-h$ShootLat
+h$ShootLong_degdec<-h$ShootLong
+#check duplicate times in h file
+h$date_time_check<-paste(h$Ship, h$Year, h$Quarter, h$month, h$Day, h$TimeShot, sep="/")
+list<-(unique(h$date_time_check))
+# 13 combos are the same
+list<-h[duplicated(h$date_time_check),]
+# this is a case of time not been updated on from the previous haul.
+# an estimated time will be added into the dataset
+haulID<-list$New_UniqueID
+h$TimeShot[h$New_UniqueID=="IE-IGFS/2003/4/CEXP/73/GOV"&h$TimeShot=="1651"]<-1851
+h$TimeShot[h$New_UniqueID=="IE-IGFS/2004/4/CEXP/11/GOV"&h$TimeShot=="813"]<-2013
+h$TimeShot[h$New_UniqueID=="IE-IGFS/2004/4/CEXP/6/GOV"&h$TimeShot=="802"]<-1000
+h$TimeShot[h$New_UniqueID=="IE-IGFS/2015/4/CEXP/102/GOV"&h$TimeShot=="745"]<-1400
+h$TimeShot[h$New_UniqueID=="NS-IBTS/1995/1/WAH3/4/GOV"&h$TimeShot=="801"]<-2001
+h$TimeShot[h$New_UniqueID=="NS-IBTS/1998/1/THA2/9/GOV"&h$TimeShot=="754"]<-1954
+h$TimeShot[h$New_UniqueID=="NS-IBTS/2013/1/DAN2/37/GOV"&h$TimeShot=="632"]<-932
+h$TimeShot[h$New_UniqueID=="NS-IBTS/2013/3/SCO3/243/GOV"&h$TimeShot=="1130"]<-1430
+h$TimeShot[h$New_UniqueID=="NS-IBTS/2016/1/SCO3/38/GOV"&h$TimeShot=="1244"]<-1444
+h$TimeShot[h$New_UniqueID=="ROCKALL/2015/3/SCO3/328/GOV"&h$TimeShot=="1054"]<-1300
+h$TimeShot[h$New_UniqueID=="ROCKALL/2015/3/SCO3/346/GOV"&h$TimeShot=="926"]<-1130
+h$TimeShot[h$New_UniqueID=="SWC-IBTS/2015/1/SCO3/62/GOV"&h$TimeShot=="1010"]<-1320
+h$TimeShot[h$New_UniqueID=="SPNGFS/2006/4/CDS/78/BAK"&h$TimeShot=="614"]<-1814
+h$TimeShot[h$New_UniqueID=="BTS/2003/3/ISI/11/BT8" &h$TimeShot=="925"]<-1125
+# wash and repeat
+h$date_time_check<-paste(h$Ship, h$Year, h$Quarter, h$month, h$Day, h$TimeShot, sep="/")
+list<-(unique(h$date_time_check))
+# 0 combos are the same
+list<-h[duplicated(h$date_time_check),]
+# thats one problem solved - now are the new haul id's unique?
+list<-(unique(h$HaulID))
+list<-h[duplicated(h$HaulID),]
+# 2 corrections have been made to the decmil min - round to nearest min
+h$HaulDur_min[h$New_UniqueID=="NS-IBTS/2008/3/JHJ/269/GOV"]<-23
+h$HaulDur_min[h$New_UniqueID=="NS-IBTS/1999/3/MIC/619/GOV"]<-32
+# no there are shed loads of duplicated ones - same problem as before I suspect with NI
+# need to use station no not haul no.
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="17"]<-"CSNIrOT4/LF/1999/17"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="35"]<-"CSNIrOT4/LF/1999/35"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="46"]<-"CSNIrOT4/LF/1999/46"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="48"]<-"CSNIrOT4/LF/1999/48"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="50"]<-"CSNIrOT4/LF/1999/50"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="51"]<-"CSNIrOT4/LF/1999/51"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="56"]<-"CSNIrOT4/LF/1999/56"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="61"]<-"CSNIrOT4/LF/1999/61"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="63"]<-"CSNIrOT4/LF/1999/63"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="64"]<-"CSNIrOT4/LF/1999/64"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="70"]<-"CSNIrOT4/LF/1999/70"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="71"]<-"CSNIrOT4/LF/1999/71"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="73"]<-"CSNIrOT4/LF/1999/73"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="75"]<-"CSNIrOT4/LF/1999/75"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="76"]<-"CSNIrOT4/LF/1999/76"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="77"]<-"CSNIrOT4/LF/1999/77"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="79"]<-"CSNIrOT4/LF/1999/79"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="81"]<-"CSNIrOT4/LF/1999/81"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="83"]<-"CSNIrOT4/LF/1999/83"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="88"]<-"CSNIrOT4/LF/1999/88"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="90"]<-"CSNIrOT4/LF/1999/90"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="92"]<-"CSNIrOT4/LF/1999/92"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="93"]<-"CSNIrOT4/LF/1999/93"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="94"]<-"CSNIrOT4/LF/1999/94"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="96"]<-"CSNIrOT4/LF/1999/96"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="97"]<-"CSNIrOT4/LF/1999/97"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="99"]<-"CSNIrOT4/LF/1999/99"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="100"]<-"CSNIrOT4/LF/1999/100"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="101"]<-"CSNIrOT4/LF/1999/101"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="102"]<-"CSNIrOT4/LF/1999/102"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="103"]<-"CSNIrOT4/LF/1999/103"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="105"]<-"CSNIrOT4/LF/1999/105"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="208"]<-"CSNIrOT4/LF/1999/208"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="216"]<-"CSNIrOT4/LF/1999/216"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="242"]<-"CSNIrOT4/LF/1999/242"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="243"]<-"CSNIrOT4/LF/1999/243"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="245"]<-"CSNIrOT4/LF/1999/245"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="246"]<-"CSNIrOT4/LF/1999/246"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="249"]<-"CSNIrOT4/LF/1999/249"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="250"]<-"CSNIrOT4/LF/1999/250"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="256"]<-"CSNIrOT4/LF/1999/256"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="259"]<-"CSNIrOT4/LF/1999/259"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="94"]<-"CSNIrOT4/LF/1999/94"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="106"]<-"CSNIrOT4/LF/1999/106"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="93"]<-"CSNIrOT4/LF/1999/93"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="243"]<-"CSNIrOT4/LF/1999/243"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="17"]<-"CSNIrOT4/LF/1999/17"
+h$HaulID[h$HaulID=="CSNIrOT4/LF/1999/1"&h$StNo=="250"]<-"CSNIrOT4/LF/1999/250"
+h$HaulID[h$HaulID=="CSNIrOT1/LF/2002/9"&h$StNo=="243"]<-"CSNIrOT1/LF/2002/243"
+h$HaulID[h$HaulID=="CSNIrOT1/LF/2002/15"&h$StNo=="250"]<-"CSNIrOT1/LF/2002/250"
+
+# recheck
+list<-(unique(h$HaulID))
+list<-h[duplicated(h$HaulID),]
+summary(h$WingSwpArea_sqkm)
+summary(h$Depth_m)
+summary(h$DoorSwptVol_CorF)
+
+haul_dat<-subset(h, 
+                 select=c(HaulID,Survey_Acronym,Ship,GearType,Gear, 
+                          YearShot,MonthShot,DayShot,TimeShot, 
+                          HaulDur_min,ShootLat_degdec,ShootLong_degdec,ICESStSq,
+                          SurvStratum,Depth_m,Distance_km,WingSpread_m, 
+                          DoorSpread_m, NetOpen_m,WingSwpArea_sqkm,
+                          WingSwpVol_CorF, DoorSwptArea_CorF,DoorSwptVol_CorF))
+
+for (cat in unique(haul_dat$Survey_Acronym)){
+  mypath <- file.path(paste("Haul Diagnostics", cat, ".jpeg", sep = ""))
+  jpeg(file=mypath)
+  par(mfrow=c(2,3))
+  d <- subset(haul_dat, Survey_Acronym == cat)
+  plot(d$ShootLong_degdec, d$ShootLat_degdec, 
+       main=unique(d$cat), pch=19, xlab="Longitude", 
+       ylab="Latitude",cex=1.9)
+  plot(europe, col="lightgrey", add=T)
+  title(unique(d$cat))
+  plot(d$HaulDur_min, d$Distance_km, pch=19, xlab="Time (min)", 
+       ylab="Distance (km)", cex=1.9)
+  x<-c(13:66)
+  points(x, x*4*1.852/60, type="l", col="red", lwd=3)
+  points(x, x*2*1.852/60, type="l", col="red", lty=2, lwd=2)
+  points(x, x*6*1.852/60, type="l", col="red", lty=2, lwd=2)
+  plot(d$Distance_km, d$WingSwpArea_sqkm, pch=19, xlab="Distance (km)", 
+       ylab="Wing Spread (km2)", cex=1.9)
+  plot(d$Depth_m, d$WingSpread_m, pch=19, xlab="Depth (m)", 
+       ylab="Wing Spread (m)", cex=1.9)
+  plot(d$Depth_m, d$DoorSpread_m, pch=19, xlab="Depth (m)", 
+       ylab="Door Spread (m)", cex=1.9)
+  plot(d$Depth_m, d$NetOpen_m, pch=19, xlab="Depth (m)", 
+       ylab="Net Opening (m)", cex=1.9)
+    dev.off()
+}
+
+write.csv(haul_dat, "Sampling_info_all_surveys_11-10-2016.csv")
+write.csv(haul_dat, "Sampling_info_all_surveys1_11-10-2016.txt")
+summary(as.factor(haul_dat$Survey_Acronym))
+
+BBICnSpaOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="BBIC(n)SpaOT4",)
+write.csv(BBICnSpaOT4, "Sampling_info_BBICnSpaOT4_11-10-2016.csv")
+#"GNSIntOT1"
+GNSIntOT1<-subset(haul_dat, haul_dat$Survey_Acronym=="GNSIntOT1",)
+write.csv(GNSIntOT1, "Sampling_info_GNSIntOT1_11-10-2016.csv")
+#"GNSIntOT3"
+GNSIntOT3<-subset(haul_dat, haul_dat$Survey_Acronym=="GNSIntOT3",)
+write.csv(GNSIntOT3, "Sampling_info_GNSIntOT3_11-10-2016.csv")
+#"GNSFraOT4"
+GNSFraOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="GNSFraOT4",)
+write.csv(GNSFraOT4, "Sampling_info_GNSFraOT4_11-10-2016.csv")
+#"CSScoOT1"
+CSScoOT1<-subset(haul_dat, haul_dat$Survey_Acronym=="CSScoOT1",)
+write.csv(CSScoOT1, "Sampling_info_CSScoOT1_11-10-2016.csv")
+#"CSScoOT4"
+CSScoOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="CSScoOT4",)
+write.csv(CSScoOT4, "Sampling_info_CSScoOT4_11-10-2016.csv")
+#"CSIreOT4"
+CSIreOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="CSIreOT4",)
+write.csv(CSIreOT4, "Sampling_info_CSIreOT4_08-08-2016.csv")
+plot(CSIreOT4$Depth_m, CSIreOT4$WingSpread_m)
+#"CSNIrOT1"
+CSNIrOT1<-subset(haul_dat, haul_dat$Survey_Acronym=="CSNIrOT1",)
+write.csv(CSNIrOT1, "Sampling_info_CSNIrOT1_11-10-2016.csv")
+#"CSNIrOT4"
+CSNIrOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="CSNIrOT4",)
+write.csv(CSNIrOT4, "Sampling_info_CSNIrOT4_11-10-2016.csv")
+#"CS/BBFraOT4"
+CSBBFraOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="CSBBFraOT4",)
+write.csv(CSBBFraOT4, "Sampling_info_CSBBFraOT4_11-10-2016.csv")
+#"BBIC(s)SpaOT1"
+BBICsSpaOT1<-subset(haul_dat, haul_dat$Survey_Acronym=="BBIC(s)SpaOT1",)
+write.csv(BBICsSpaOT1, "Sampling_info_BBIC(s)SpaOT1_11-10-2016.csv")
+#"BBIC(s)SpaOT4"
+BBICsSpaOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="BBIC(s)SpaOT4",)
+write.csv(BBICsSpaOT4, "Sampling_info_BBIC(s)SpaOT4_11-10-2016.csv")
+#"BBIC(n)SpaOT4"
+BBICnSpaOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="BBIC(n)SpaOT4",)
+write.csv(BBICnSpaOT4, "Sampling_info_BBIC(n)SpaOT4_11-10-2016.csv")
+#"BBICPorOT4"
+BBICPorOT4<-subset(haul_dat, haul_dat$Survey_Acronym=="BBICPorOT4",)
+write.csv(BBICPorOT4, "Sampling_info_BBICPorOT4_11-10-2016.csv")
+#"WAScoOT3"
+WAScoOT3<-subset(haul_dat, haul_dat$Survey_Acronym=="WAScoOT3",)
+write.csv(WAScoOT3, "Sampling_info_WAScoOT3_11-10-2016.csv")
+#"WASpaOT3"
+WASpaOT3<-subset(haul_dat, haul_dat$Survey_Acronym=="WASpaOT3",)
+write.csv(WASpaOT3, "Sampling_info_WASpaOT3_11-10-2016.csv")
+#"GNSNetBT3"
+GNSNetBT3<-subset(haul_dat, haul_dat$Survey_Acronym=="GNSNetBT3",)
+write.csv(GNSNetBT3, "Sampling_info_GNSNetBT3_11-10-2016.csv")
+#"GNSGerBT3"
+GNSGerBT3<-subset(haul_dat, haul_dat$Survey_Acronym=="GNSGerBT3",)
+write.csv(GNSGerBT3, "Sampling_info_GNSGerBT3_11-10-2016.csv")
+#"GNSEngBT3"
+GNSEngBT3<-subset(haul_dat, haul_dat$Survey_Acronym=="GNSEngBT3",)
+write.csv(GNSEngBT3, "Sampling_info_GNSEngBT3_11-10-2016.csv")
+#"CSEngBT3"
+CSEngBT3<-subset(haul_dat, haul_dat$Survey_Acronym=="CSEngBT3",)
+write.csv(CSEngBT3, "Sampling_info_CSEngBT3_11-10-2016.csv")
+######################################################
+# Standardised Survey Area and Period Data Product. ##
+######################################################
+# Select standard survey areas
+# Rule 1:Rectangle must be sampled in 50% of years
+# Rule 2: the number of rectangles sampled at least once in 
+# the years at the start and end of time series = 20% of total time series?
+#############
+# 1GNSGerBT3 #
+#############
+# survey period 2002 -2015 break 2006 
+# 13 years 
+# Rule 1: 7 yrs or more
+
+# Read file of HH data for "GNSGerBT3"
+GNSGerBT3<-read.csv("Sampling_info_GNSGerBT3_11-10-2016.csv")
+# 664 samples
+# 50% Rule 
+names(GNSGerBT3)
+Rect_summary<-ddply(GNSGerBT3, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(GNSGerBT3$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(GNSGerBT3, !ICESStSq%in%list_out,)
+nrow(GNSGerBT3)-nrow(SSA_rule1)
+# 32 samples removed in 6 ICESStSq
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+y<-round((x/100)*20)
+max(as.numeric(GNSGerBT3$YearShot))-y
+min(as.numeric(GNSGerBT3$YearShot))+y
+# check min 2002-2004
+min<-subset(Rect_summary2, YearShot>(as.numeric(min(GNSGerBT3$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 20 in list - all retained
+# check max 2013-2015
+max<-subset(Rect_summary2, YearShot<(as.numeric(max(GNSGerBT3$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 20 in list - all retained
+
+# new file for SSA Sampling info
+write.csv(SSA_rule1, "SSA_Sampling_info_GNSGerBT3_05-09-2016.csv")
+SSA_GNSGerBT3<-SSA_rule1
+##############
+# 2 GNSNetBT3" #
+##############
+# Read file of HH data 
+# survey period 1999 -2015 
+GNSNetBT3<-read.csv("Sampling_info_GNSNetBT3_11-10-2016.csv")
+summary(GNSNetBT3$YearShot)
+nrow(GNSNetBT3)
+# remove all samples before 1999
+step1<-subset(GNSNetBT3, YearShot>1998,)
+summary(step1$YearShot)
+nrow(GNSNetBT3)-nrow(step1)
+# 2508 samples
+# 50% Rule 
+Rect_summary<-ddply(step1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(step1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(step1, !ICESStSq%in%list_out,)
+nrow(step1)-nrow(SSA_rule1)
+# 113 samples removed in 32 ICESStSq
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(step1$YearShot))-y
+min(as.numeric(step1$YearShot))+y
+# check max 2011-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(step1$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 91 in list - all retained
+# check min 1999-2003
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(step1$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 89 in list -  2 rects not sampled
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_GNSNetBT3_05-09-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, list1, max, min, SSA_rule1, SSA_rule2, step1, 
+   GNSNetBT3, GNSGerBT3,Rect_summary, Rect_summary2)
+SSA_GNSNetBT3<-SSA_rule2
+###############
+# 3 GNSEngBT3" #
+###############
+# Read file of HH data 
+# survey period 1990 -2015 
+GNSEngBT3<-read.csv("Sampling_info_GNSEngBT3_02-087-2016.csv")
+# GNSEngBT3/END/2012/26 
+# no fish data in the HL file - remove 
+GNSEngBT3_1<-subset(GNSEngBT3, !HaulID=="GNSEngBT3/END/2012/26")
+summary(GNSEngBT3_1$YearShot)
+nrow(GNSEngBT3_1)
+# 2386 samples
+# 50% Rule 
+Rect_summary<-ddply(GNSEngBT3_1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(GNSEngBT3_1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(GNSEngBT3_1, !ICESStSq%in%list_out,)
+nrow(GNSEngBT3)-nrow(SSA_rule1)
+# 127 hauls removed in 14 rectangles
+# changes previous results now 139 samples out
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(GNSEngBT3$YearShot))-y
+min(as.numeric(GNSEngBT3$YearShot))+y
+# check max 2009-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(GNSEngBT3$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 15 in list - all retained
+# check min 1990-1996
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(GNSEngBT3$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 15 in list -  all
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_GNSEngBT3V1_11-10-2016.csv")
+SSA_GNSEngBT3<-SSA_rule2
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   GNSEngBT3,Rect_summary, Rect_summary2)
+#############
+#4 GNSIntOT1"#
+#############
+# Read file of HH data 
+# survey period 1983 -2016 
+GNSIntOT1<-read.csv("Sampling_info_GNSIntOT1_11-10-2016.csv")
+summary(GNSIntOT1$YearShot)
+nrow(GNSIntOT1)
+# Need to remove GNSIntOT1/DAN2/1987/32
+GNSint_remove<-c("GNSIntOT1/DAN2/1987/32")
+GNSIntOT1_1<-subset(GNSIntOT1, !HaulID%in%GNSint_remove,)
+
+# 13516 samples
+# 50% Rule 
+Rect_summary<-ddply(GNSIntOT1_1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(GNSIntOT1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(GNSIntOT1_1, !ICESStSq%in%list_out,)
+nrow(GNSIntOT1)-nrow(SSA_rule1)
+# 254 hauls removed in 23 rectangles
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(GNSIntOT1$YearShot))-y
+min(as.numeric(GNSIntOT1$YearShot))+y
+# check max 2009-2016
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(GNSIntOT1_1$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 172 in list - all retained
+# check min 1983-1990
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(GNSIntOT1_1$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 171 in list -  one needs to be removed
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+SSA_GNSIntOT1<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_GNSIntOT1_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   GNSIntOT1,Rect_summary, Rect_summary2)
+##############
+# 5 GNSIntOT3"#
+##############
+# Read file of HH data 
+# survey period 1998 -2015 
+GNSIntOT3<-read.csv("Sampling_info_GNSIntOT3_11-10-2016.csv")
+summary(GNSIntOT3$YearShot)
+nrow(GNSIntOT3)
+# 5872 samples
+# 50% Rule 
+Rect_summary<-ddply(GNSIntOT3, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(GNSIntOT3$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(GNSIntOT3, !ICESStSq%in%list_out,)
+nrow(GNSIntOT3)-nrow(SSA_rule1)
+# 84 hauls removed in 14 rectangles
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(GNSIntOT3$YearShot))-y
+min(as.numeric(GNSIntOT3$YearShot))+y
+# check max 2011-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(GNSIntOT3$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 168 in list - all retained
+# check min 1998-2002
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(GNSIntOT3$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 168 in list - all retained
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+SSA_GNSIntOT3<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_GNSIntOT3_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   GNSIntOT3,Rect_summary, Rect_summary2)
+###############
+#6 GNSFraOT4" #
+###############
+# Read file of HH data 
+# survey period 1988 -2014
+GNSFraOT4<-read.csv("Sampling_info_GNSFraOT4_11-10-2016.csv")
+summary(GNSFraOT4$YearShot)
+nrow(GNSFraOT4)
+#  2398 samples
+# 50% Rule 
+Rect_summary<-ddply(GNSFraOT4, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(GNSFraOT4$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(GNSFraOT4, !ICESStSq%in%list_out,)
+nrow(GNSFraOT4)-nrow(SSA_rule1)
+# 0 hauls removed in 0 rectangles
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(GNSFraOT4$YearShot))-y
+min(as.numeric(GNSFraOT4$YearShot))+y
+# check max 2008-2014
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(GNSFraOT4$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 16 in list - all retained
+# check min 1988-1994
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(GNSFraOT4$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 15 in list - 1 lost
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+SSA_GNSFraOT4<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_GNSFraOT4_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   GNSFraOT4,Rect_summary, Rect_summary2)
+#############
+#7 CSEngBT3"##
+#############
+# Read file of HH data 
+# survey period 1993 -2015
+CSEngBT3<-read.csv("Sampling_info_CSEngBT3_11-10-2016.csv")
+# CSEngBT3/COR/2000/143 
+# no fish data in the HL file - remove 
+CSEngBT3_1<-subset(CSEngBT3, !HaulID=="CSEngBT3/COR/2000/143")
+#CSENG_remove<-c("CSEngBT3/END/2014/122","CSEngBT3/END/2014/127",
+
+summary(CSEngBT3_1$YearShot)
+
+nrow(CSEngBT3_1)
+summary(CSEngBT3$YearShot)
+nrow(CSEngBT3)
+#  2453 samples
+# 50% Rule 
+Rect_summary<-ddply(CSEngBT3_1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(CSEngBT3_1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(CSEngBT3_1, !ICESStSq%in%list_out,)
+nrow(CSEngBT3_1)-nrow(SSA_rule1)
+# 66 hauls removed in 10 rectangles
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(CSEngBT3_1$YearShot))-y
+min(as.numeric(CSEngBT3_1$YearShot))+y
+# check max 2010-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(CSEngBT3_1$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 23 in list - all retained
+# check min 1993-1998
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(CSEngBT3_1$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 23 in list
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+SSA_CSEngBT3<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_CSEngBT3V1_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   CSEngBT3,Rect_summary, Rect_summary2)
+############
+#8 CSScoOT1"#
+############
+# Read file of HH data 
+# survey period 1985 -2016
+CSScoOT1<-read.csv("Sampling_info_CSScoOT1_11-10-2016.csv")
+summary(CSScoOT1$YearShot)
+nrow(CSScoOT1)
+#  1795 samples
+# 50% Rule 
+Rect_summary<-ddply(CSScoOT1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(CSScoOT1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(CSScoOT1, !ICESStSq%in%list_out,)
+nrow(CSScoOT1)-nrow(SSA_rule1)
+# 303 hauls removed in 30 rectangles
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(CSScoOT1$YearShot))-y
+min(as.numeric(CSScoOT1$YearShot))+y
+# check max 2009-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(CSScoOT1$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 39 in list - all retained
+# check min 1985-1992
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(CSScoOT1$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 39 in list
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+SSA_CSScoOT1<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_CSScoOT1_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   CSScoOT1,Rect_summary, Rect_summary2, x, y)
+############
+#9 CSScoOT4"#
+############
+# Read file of HH data 
+# survey period 1990 -2015
+CSScoOT4<-read.csv("Sampling_info_CSScoOT4_11-10-2016.csv")
+summary(CSScoOT4$YearShot)
+nrow(CSScoOT4)
+#  1525 samples
+# remove all samples prior to 1995
+step1<-subset(CSScoOT4, YearShot>1994,)
+#1315 samples
+# 50% Rule 
+Rect_summary<-ddply(step1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(step1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(step1, !ICESStSq%in%list_out,)
+nrow(step1)-nrow(SSA_rule1)
+# 192 hauls removed
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(step1$YearShot))-y
+min(as.numeric(step1$YearShot))+y
+# check max 2011-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(step1$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 43 in list - 7 lost
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# redo Stat Rec Summary with new samples
+Rect_summary2<-ddply(SSA_rule2, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# check min 1995-1999
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(step1$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 42 in list
+SSA_rule2_1<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_CSScoOT4<-SSA_rule2_1
+# new file for SSA Sampling info
+write.csv(SSA_rule2_1, "SSA_Sampling_info_CSScoOT4_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, SSA_rule2_1,
+   CSScoOT2,Rect_summary, Rect_summary2, x, y)
+#############
+#10CSIreOT4"#
+#############
+# Read file of HH data 
+# survey period 2003 -2015
+CSIreOT4<-read.csv("Sampling_info_CSIreOT4_08-08-2016.csv")
+summary(CSIreOT4$YearShot)
+nrow(CSIreOT4)
+#  2118 samples
+# 50% Rule 
+Rect_summary<-ddply(CSIreOT4, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(CSIreOT4$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(CSIreOT4, !ICESStSq%in%list_out,)
+nrow(CSIreOT4)-nrow(SSA_rule1)
+# 98 hauls removed
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(CSIreOT4$YearShot))-y
+min(as.numeric(CSIreOT4$YearShot))+y
+# check max 2012-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(CSIreOT4$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 54 in list - all retained
+# check min 2003-2006
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(CSIreOT4$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 51 in list
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+SSA_CSIreOT4<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_CSIreOT4_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   CSIreOT4,Rect_summary, Rect_summary2, x, y)
+#############
+#11CSNIrOT1"##
+#############
+# Read file of HH data 
+# survey period 1992 -2015
+CSNIrOT1<-read.csv("Sampling_info_CSNIrOT1_11-10-2016.csv")
+summary(CSNIrOT1$YearShot)
+nrow(CSNIrOT1)
+#  1172 samples
+# 50% Rule 
+Rect_summary<-ddply(CSNIrOT1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(CSNIrOT1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(CSNIrOT1, !ICESStSq%in%list_out,)
+nrow(CSNIrOT1)-nrow(SSA_rule1)
+# 96 hauls removed
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(CSNIrOT1$YearShot))-y
+min(as.numeric(CSNIrOT1$YearShot))+y
+# check max 2010-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(CSNIrOT1$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 12 in list - all retained
+# check min 1992-1997
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(CSNIrOT1$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 12 in list
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+SSA_CSNIrOT1<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_CSNIrOT1_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   CSNIrOT1,Rect_summary, Rect_summary2, x, y)
+#############
+#12CSNIrOT4"##
+#############
+# Read file of HH data 
+# survey period 1992 -2015
+CSNIrOT4<-read.csv("Sampling_info_CSNIrOT4_11-10-2016.csv")
+summary(CSNIrOT4$YearShot)
+nrow(CSNIrOT4)
+#  1180 samples
+# 50% Rule 
+Rect_summary<-ddply(CSNIrOT4, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(CSNIrOT4$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(CSNIrOT4, !ICESStSq%in%list_out,)
+nrow(CSNIrOT4)-nrow(SSA_rule1)
+# 71 hauls removed
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(CSNIrOT4$YearShot))-y
+min(as.numeric(CSNIrOT4$YearShot))+y
+# check max 2010-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(CSNIrOT4$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 13 in list - all retained
+# check min 1992-1997
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(CSNIrOT4$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 12 in list 1 lost
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+
+SSA_CNNIrOT4<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_CSNIrOT4_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   CSNIrOT4,Rect_summary, Rect_summary2, x, y)
+################
+#13CS/BBFraOT4" #
+################
+# Read file of HH data 
+# survey period 1997 -2015
+CSBBFraOT4<-read.csv("Sampling_info_CSBBFraOT4_11-10-2016.csv")
+summary(CSBBFraOT4$YearShot)
+nrow(CSBBFraOT4)
+#  2641 samples
+# 50% Rule 
+Rect_summary<-ddply(CSBBFraOT4, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(CSBBFraOT4$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(CSBBFraOT4, !ICESStSq%in%list_out,)
+nrow(CSBBFraOT4)-nrow(SSA_rule1)
+# 52 hauls removed in 8 rect
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(CSBBFraOT4$YearShot))-y
+min(as.numeric(CSBBFraOT4$YearShot))+y
+# check max 2011-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(CSBBFraOT4$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 65 in list - 1 lost
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# check min 1997-2001
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(CSBBFraOT4$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 12 in list 1 lost
+SSA_rule2<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_CSBBFraOT4<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_CSBBFraOT4_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   CSBBFraOT4,Rect_summary, Rect_summary2, x, y)
+###############
+#14 BBICPorOT4"##
+###############
+# Read file of HH data 
+# survey period 2002 -2014
+BBICPorOT4<-read.csv("Sampling_info_BBICPorOT4_11-10-2016.csv")
+summary(BBICPorOT4$YearShot)
+nrow(BBICPorOT4)
+#  866 samples
+# 50% Rule 
+Rect_summary<-ddply(BBICPorOT4, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(BBICPorOT4$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(BBICPorOT4, !ICESStSq%in%list_out,)
+nrow(BBICPorOT4)-nrow(SSA_rule1)
+# 9 hauls removed in 2 rect
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(BBICPorOT4$YearShot))-y
+min(as.numeric(BBICPorOT4$YearShot))+y
+# check max 2012-2014
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(BBICPorOT4$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 20 in list - allretained
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# check min 2002-2004
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(BBICPorOT4$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 18 in list 2 lost
+SSA_rule2<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_BBICPorOT4<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_BBICPorOT4_11-10-2016.txt")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   BBICPorOT4,Rect_summary, Rect_summary2, x, y)
+#############
+#15 WAScoOT3"#
+#############
+# Read file of HH data 
+# survey period 1999 -2015
+WAScoOT3<-read.csv("Sampling_info_WAScoOT3_11-10-2016.csv")
+summary(WAScoOT3$YearShot)
+nrow(WAScoOT3)
+#  565 samples
+# 50% Rule 
+Rect_summary<-ddply(WAScoOT3, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(WAScoOT3$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(WAScoOT3, !ICESStSq%in%list_out,)
+nrow(WAScoOT3)-nrow(SSA_rule1)
+# 21 hauls removed in 5 rect
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(WAScoOT3$YearShot))-y
+min(as.numeric(WAScoOT3$YearShot))+y
+# check max 2012-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(WAScoOT3$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 8 in list - allretained
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# check min 1999-2002
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(WAScoOT3$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 18 in list 2 lost
+SSA_rule2<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_WAScoOT3<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_WAScoOT3_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   WAScoOT3,Rect_summary, Rect_summary2, x, y)
+###################
+#16 BBIC(n)SpaOT4 #
+###################
+BBICnSpaOT4<-read.csv("Sampling_info_BBICnSpaOT4_11-10-2016.csv")
+summary(BBICnSpaOT4$YearShot)
+nrow(BBICnSpaOT4)
+#  565 samples
+# 50% Rule 
+Rect_summary<-ddply(BBICnSpaOT4, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(BBICnSpaOT4$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(BBICnSpaOT4, !ICESStSq%in%list_out,)
+nrow(BBICnSpaOT4)-nrow(SSA_rule1)
+# 77 hauls removed in 4 rect
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(BBICnSpaOT4$YearShot))-y
+min(as.numeric(BBICnSpaOT4$YearShot))+y
+# check max 2012-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(BBICnSpaOT4$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 7 in list
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# check min 1999-2002
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(BBICnSpaOT4$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 7 in list
+SSA_rule2<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_BBICnSpaOT4<-SSA_rule2
+
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_BBICnSpaOT4_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   BBICnSpaOT4,Rect_summary, Rect_summary2, x, y)
+###################
+#17 BBIC(s)SpaOT1 #
+###################
+BBICsSpaOT1<-read.csv("Sampling_info_BBIC(s)SpaOT1_11-10-2016.csv")
+summary(BBICsSpaOT1$YearShot)
+nrow(BBICsSpaOT1)
+#  565 samples
+# 50% Rule 
+Rect_summary<-ddply(BBICsSpaOT1, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(BBICsSpaOT1$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(BBICsSpaOT1, !ICESStSq%in%list_out,)
+nrow(BBICsSpaOT1)-nrow(SSA_rule1)
+# 8 hauls removed in 1 rect
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(BBICsSpaOT1$YearShot))-y
+min(as.numeric(BBICsSpaOT1$YearShot))+y
+# check max 2012-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(BBICsSpaOT1$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 5 in list - allretained
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# check min 1999-2002
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(BBICsSpaOT1$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 5 in list 
+SSA_rule2<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_BBICsSpaOT1<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_BBICsSpaOT1_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   BBICsSpaOT1,Rect_summary, Rect_summary2, x, y)
+###################
+#18 BBIC(s)SpaOT4 #
+###################
+BBICsSpaOT4<-read.csv("Sampling_info_BBIC(s)SpaOT4_11-10-2016.csv")
+summary(BBICsSpaOT4$YearShot)
+nrow(BBICsSpaOT4)
+#  565 samples
+# 50% Rule 
+Rect_summary<-ddply(BBICsSpaOT4, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(BBICsSpaOT4$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(BBICsSpaOT4, !ICESStSq%in%list_out,)
+nrow(BBICsSpaOT4)-nrow(SSA_rule1)
+# 4 hauls removed in 1 rect
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(BBICsSpaOT4$YearShot))-y
+min(as.numeric(BBICsSpaOT4$YearShot))+y
+# check max 2012-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(BBICsSpaOT4$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 5 in list 
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# check min
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(BBICsSpaOT4$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 5 in list 
+SSA_rule2<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_BBICsSpaOT4<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_BBICsSpaOT4_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   BBICsSpaOT4,Rect_summary, Rect_summary2, x, y)
+##############
+#19 WASpaOT3 #
+##############
+WASpaOT3<-read.csv("Sampling_info_WASpaOT3_11-10-2016.csv")
+summary(WASpaOT3$YearShot)
+nrow(WASpaOT3)
+#  565 samples
+# 50% Rule 
+Rect_summary<-ddply(WASpaOT3, c("ICESStSq"), summarise,
+                    N=length(unique(YearShot)))
+x<-length(unique(WASpaOT3$YearShot))
+x/2
+out<-subset(Rect_summary, N<(ceiling(x/2)))
+list_out<-out$ICESStSq
+SSA_rule1<-subset(WASpaOT3, !ICESStSq%in%list_out,)
+nrow(WASpaOT3)-nrow(SSA_rule1)
+# 21hauls removed in 1 rect
+# Rule 2 Rectangle must be sampled within first and last 20% of years
+Rect_summary2<-ddply(SSA_rule1, c("ICESStSq", "YearShot"), summarise,
+                     N=length(unique(HaulID)))
+# round up to higher whole number
+y<-ceiling((x/100)*20)
+max(as.numeric(WASpaOT3$YearShot))-y
+min(as.numeric(WASpaOT3$YearShot))+y
+# check max 2012-2015
+max<-subset(Rect_summary2, YearShot>(max(as.numeric(WASpaOT3$YearShot))-y))
+list<-unique(max$ICESStSq)
+# 17 in list 
+SSA_rule2<-subset(SSA_rule1, ICESStSq%in%list,)
+# check min 1999-2002
+min<-subset(Rect_summary2, YearShot<(min(as.numeric(WASpaOT3$YearShot))+y))
+list<-unique(min$ICESStSq)
+# 17 in list 
+SSA_rule2<-subset(SSA_rule2, ICESStSq%in%list,)
+SSA_WASpaOT3<-SSA_rule2
+# new file for SSA Sampling info
+write.csv(SSA_rule2, "SSA_Sampling_info_WASpaOT3_11-10-2016.csv")
+# Remove all intermediate files
+rm(list, list_out, max, min, SSA_rule1, SSA_rule2, 
+   WASpaOT3,Rect_summary, Rect_summary2, x, y)
