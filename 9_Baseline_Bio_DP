@@ -1,0 +1,232 @@
+
+###################
+# Version Control #
+###################
+# R version 3.2.2 (2015-08-14): Fire Safety 
+# platform       x86_64-w64-mingw32 (64-bit)
+###############
+# Script Info #
+###############
+# This is Script 9 of 9 
+# The purpose of this script is to seperate the surveys and 
+# define the final data products structure for the biological data files
+# Then select the Standard Survey Area using the agreed criteria 
+# AUTHOR: Meadhbh Moriarty, 2016
+# REVIEWED BY: 
+###############
+names(dat8)
+names(h)
+merger<-subset(h, select=c(New_UniqueID,HaulID,Survey_Acronym))
+
+dat9<-join(merger,dat8, by="New_UniqueID")
+nrow(dat8)-nrow(dat9)
+# Non Standard Survery area - Master copy only
+names(dat9)
+dat9$RecordStatus<-dat9$Filter
+dat9$SciName<-dat9$estsciname
+dat9$FishLength_cm<-dat9$FishLength_cm_below
+dat9$DensNsqkm1<-dat9$DensNsqkm
+summary(dat9$DensNsqkm)
+summary(dat9$TotalNoKm2)
+dat9$DensNsqkm1[dat9$DensNsqkm==0]<-dat9$TotalNoKm2[dat9$DensNsqkm==0]
+summary(dat9$DensNsqkm1)
+dat9$DensAbund_N_sqkm<-dat9$DensNsqkm1
+dat9$Number<-dat9$DensNsqkm1*dat9$SweptArea_wing_km_sqrd
+summary(dat9$Number)
+summary(as.numeric(dat9$TotalNo))
+summary(as.numeric(dat9$HLNoAtLngt_N))
+# #################
+# Required Fields #
+###################
+## HaulID
+## SpeciesSciName
+## FishLength(cm)
+## Number
+## DensAbund(N_sqkm)
+#######################
+#Master Copey Baseline#
+#######################
+Baseline<-subset(dat9, 
+                 select=c(HaulID, SciName, FishLength_cm,Number, DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline, "All_surveys_basline_12-10-2016.csv")
+###############
+# SSA Baseline#
+###############
+# following on from previous file - create a biological file for each level
+###############
+# 1 GNSGerBT3 #
+###############
+list<-unique(SSA_GNSGerBT3$HaulID)
+
+Baseline_SSA_GNSGerBT3<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_GNSGerBT3, "Baseline_GNSGerBT3_12-10-2016.csv")
+##################
+# 2. GNSNetBT3" #
+#################
+#SSA_GNSNetBT3
+list<-unique(SSA_GNSNetBT3$HaulID)
+Baseline_SSA_GNSNetBT3<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_GNSNetBT3, "Baseline_SSA_GNSNetBT3_12-10-2016.csv")
+#################
+# 3. GNSEngBT3" #
+#################
+#SSA_GNSEngBT3
+list<-unique(SSA_GNSEngBT3$HaulID)
+Baseline_SSA_GNSEngBT3<-subset(dat9, HaulID%in%list,
+                                   select=c(HaulID, SciName, FishLength_cm,Number, 
+                                            DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_GNSEngBT3, "Baseline_SSA_GNSEngBT3_12-10-2016.csv")
+###############
+#4. GNSIntOT1"#
+###############
+# SSA_GNSIntOT1
+list<-unique(SSA_GNSIntOT1$HaulID)
+Baseline_SSA_GNSIntOT1<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_GNSIntOT1, "Baseline_SSA_GNSIntOT1_12-10-2016.csv")
+################
+# 5. GNSIntOT3 #
+################
+#  SSA_GNSIntOT3
+list<-unique(SSA_GNSIntOT3$HaulID)
+Baseline_SSA_GNSIntOT3<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_GNSIntOT3, "Baseline_SSA_GNSIntOT3_12-10-2016.csv")
+#################
+# 6 .GNSFraOT4  #
+#################
+# SSA_GNSFraOT4
+list<-unique(SSA_GNSFraOT4$HaulID)
+Baseline_SSA_GNSFraOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_GNSFraOT4, "Baseline_SSA_GNSFraOT4_12-10-2016.csv")
+###############
+# 7. CSEngBT3 #
+###############
+# SSA_CSEngBT3
+list<-unique(SSA_CSEngBT3$HaulID)
+Baseline_SSA_CSEngBT3<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_CSEngBT3, "Baseline_SSA_CSEngBT3_12-10-2016.csv")
+###############
+# 8. CSScoOT1 #
+###############
+# SSA_CSScoOT1
+list<-unique(SSA_CSScoOT1$HaulID)
+
+Baseline_SSA_CSScoOT1<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_CSScoOT1, "Baseline_SSA_CSScoOT1_12-10-2016.csv")
+###############
+# 9. CSScoOT4 #
+###############
+# SSA_CSScoOT4
+list<-unique(SSA_CSScoOT4$HaulID)
+
+Baseline_SSA_CSScoOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_CSScoOT4, "Baseline_SSA_CSScoOT4_12-10-2016.csv")
+################
+# 10. CSIreOT4 #
+################
+# SSA_CSIreOT4
+list<-unique(SSA_CSIreOT4$HaulID)
+Baseline_SSA_CSIreOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_CSIreOT4, "Baseline_SSA_CSIreOT4_12-10-2016.csv")
+################
+# 11. CSNIrOT1 #
+################
+# SSA_CSNIrOT1
+list<-unique(SSA_CSNIrOT1$HaulID)
+
+Baseline_SSA_CSNIrOT1<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_CSNIrOT1, "Baseline_SSA_CSNIrOT1_12-10-2016.csv")
+################
+# 12. CSNIrOT4 #
+################
+# SSA_CNNIrOT4
+list<-unique(SSA_CNNIrOT4$HaulID)
+
+Baseline_SSA_CNNIrOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_CNNIrOT4, "Baseline_SSA_CNNIrOT4_12-10-2016.csv")
+##################
+#13. CS/BBFraOT4 #
+##################
+# SSA_CSBBFraOT4
+list<-unique(SSA_CSBBFraOT4$HaulID)
+
+Baseline_SSA_CSBBFraOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_CSBBFraOT4, "Baseline_SSA_CSBBFraOT4_12-10-2016.csv")
+##################
+# 14. BBICPorOT4 #
+##################
+# SSA_BBICPorOT4
+list<-unique(SSA_BBICPorOT4$HaulID)
+Baseline_SSA_BBICPorOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_BBICPorOT4, "Baseline_SSA_BBICPorOT4_12-10-2016.csv")
+################
+# 15. WAScoOT3 #
+################
+# SSA_WAScoOT3
+list<-unique(SSA_WAScoOT3$HaulID)
+Baseline_SSA_WAScoOT3<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_WAScoOT3, "Baseline_SSA_WAScoOT3_12-10-2016.csv")
+###################
+#16 BBIC(n)SpaOT4 #
+###################
+# SSA_BBICnSpaOT4
+list<-unique(SSA_BBICnSpaOT4$HaulID)
+
+Baseline_SSA_BBICnSpaOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_BBICnSpaOT4, "Baseline_SSA_BBICnSpaOT4_12-10-2016.csv")
+###################
+#17 BBIC(s)SpaOT1 #
+###################
+# SSA_BBICsSpaOT1
+list<-unique(SSA_BBICsSpaOT1$HaulID)
+Baseline_SSA_BBICsSpaOT1<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_BBICsSpaOT1, "Baseline_SSA_BBICsSpaOT1_12-10-2016.csv")
+###################
+#18 BBIC(s)SpaOT4 #
+###################
+# SSA_BBICsSpaOT4
+list<-unique(SSA_BBICsSpaOT4$HaulID)
+Baseline_SSA_BBICsSpaOT4<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_BBICsSpaOT4, "Baseline_SSA_BBICsSpaOT4_12-10-2016.csv")
+##############
+#19 WASpaOT3 #
+##############
+# SSA_WASpaOT3
+list<-unique(SSA_WASpaOT3$HaulID)
+Baseline_SSA_WASpaOT3<-subset(dat9, HaulID%in%list,
+                               select=c(HaulID, SciName, FishLength_cm,Number, 
+                                        DensAbund_N_sqkm,RecordStatus))
+write.csv(Baseline_SSA_WASpaOT3, "Baseline_SSA_WASpaOT3_12-10-2016.csv")
