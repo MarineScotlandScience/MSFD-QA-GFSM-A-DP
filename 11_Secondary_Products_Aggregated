@@ -1,0 +1,66 @@
+###################
+# Version Control #
+###################
+# R version 3.2.2 (2015-08-14): Fire Safety 
+# platform       x86_64-w64-mingw32 (64-bit)
+###############
+# Script Info #
+###############
+# Script 11
+# Secondary products/ regional/rectangle based densities are required.
+# AUTHOR: Meadhbh Moriarty, 2016
+# REVIEWED BY: 
+####################################################
+# Prepare Data for aggregation at rectangle level #
+###################################################
+Knn_Biological_sum<-read.csv("BiologicalInfo_All_surveys_FullSMP_kNN_V2.csv")
+SSA_kNN_Biological<-read.csv("BiologicalInfo_AllSurveys_SSASMP_kNN_V2.csv")
+memory.size(10000000000000)
+# Get Densities per stat rec per year for the SSA data sets
+hauls_per_stat_rec<-ddply(SSA_haul_dat, c("Survey_Acronym", "YearShot", "ICESStSq"),
+                          summarise, CountHaulID=length(unique(HaulID))) 
+statsq_per_year<-ddply(SSA_haul_dat, c("Survey_Acronym", "YearShot"),
+                      summarise, CountICESStSq=length(unique(ICESStSq))) 
+# These two look up tables will allow me to calculate the densities
+# next organise densities
+merger<-subset(SSA_haul_dat, select=c("HaulID", "ICESStSq"))
+SSA_kNN_Biological1<-merge(SSA_kNN_Biological, merger, by=("HaulID"))
+names(SSA_kNN_Biological1)
+summary(SSA_kNN_Biological1$DensAbund_N_Sqkm)
+SSA_kNN_Biological1$YearShot<-SSA_kNN_Biological1$Year
+densities<-ddply(SSA_kNN_Biological1, c("YearShot","Survey_Acronym","ICESStSq",
+                                        "SpeciesSciName","FishLength_cm" ),
+                summarise, SumDensAbund_N_Sqkm=sum(DensAbund_N_Sqkm),
+                SumDensBiom_kg_Sqkm=sum(DensBiom_kg_Sqkm))
+
+densities_mean<-merge(densities,hauls_per_stat_rec, by=c("YearShot","Survey_Acronym", "ICESStSq"))
+densities_mean$RectDensAbund_N_Sqkm<-densities_mean$SumDensAbund_N_Sqkm/densities_mean$CountHaulID
+densities_mean$RectDensBiom_kg_Sqkm<-densities_mean$SumDensBiom_kg_Sqkm/densities_mean$CountHaulID
+plot(densities_mean$Year, densities_mean$RectDensAbund_N_Sqkm, pch=19, col=cols[as.factor(densities_mean$Survey_Acronym)])
+write.csv(densities_mean, "AllSurveys_RectAnnSppDensAtLen_SSASMP_kNN_V2.csv")
+
+for (cat in unique(densities_mean$Survey_Acronym)){
+  mypath <- file.path(paste(cat, "_RectAnnSppDensAtLen_SSASMP_kNN_V2.csv", sep = ""))
+  d <- subset(densities_mean, Survey_Acronym == cat)
+  write.csv(d, file=mypath)
+ }
+##################################################
+# Prepare Data for aggregation at regional level #
+##################################################
+regional_densities<-ddply(densities_mean, c("YearShot","Survey_Acronym",
+                                            "SpeciesSciName","FishLength_cm"),
+                 summarise, SumRectDensAbund_N_Sqkm=sum(RectDensAbund_N_Sqkm),
+                 SumRectDensBiom_kg_Sqkm=sum(RectDensBiom_kg_Sqkm))
+
+regional_densities<-merge(regional_densities,statsq_per_year, by=c("YearShot","Survey_Acronym"))
+regional_densities$RegionDensAbund_N_Sqkm<-regional_densities$SumRectDensAbund_N_Sqkm/regional_densities$CountICESStSq
+regional_densities$RegionDensBiom_kg_Sqkm<-regional_densities$SumRectDensBiom_kg_Sqkm/regional_densities$CountICESStSq
+plot(regional_densities$Year, regional_densities$RegionDensAbund_N_Sqkm, pch=19, col=cols[as.factor(regional_densities$Survey_Acronym)])
+
+write.csv(regional_densities, "AllSurveys_RegionAnnSppDensAtLen_SSASMP_kNN_V2.csv")
+
+for (cat in unique(regional_densities$Survey_Acronym)){
+  mypath <- file.path(paste(cat, "_RegionAnnSppDensAtLen_SSASMP_kNN_V2.csv", sep = ""))
+  d <- subset(regional_densities, Survey_Acronym == cat)
+  write.csv(d, file=mypath)
+ }
