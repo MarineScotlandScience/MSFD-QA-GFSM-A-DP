@@ -1,0 +1,472 @@
+# Check Number of Trawl Samples
+nrow(SSA_haul_dat)
+nrow(SSA_WASpaOT3)
+nrow(SSA_WAScoOT3)
+nrow(SSA_GNSNetBT3)
+nrow(SSA_GNSIntOT3)
+nrow(SSA_GNSIntOT1)
+nrow(SSA_GNSGerBT3)
+nrow(SSA_GNSFraOT4)
+nrow(SSA_GNSEngBT3)
+nrow(SSA_CSScoOT4)
+nrow(SSA_CSScoOT1)
+nrow(SSA_CNNIrOT4)
+nrow(SSA_CSNIrOT1)
+nrow(SSA_CSIreOT4)
+nrow(SSA_CSEngBT3)
+nrow(SSA_CSBBFraOT4)
+summary(as.factor(SSA_CSBBFraOT4$Survey_Acronym))
+nrow(SSA_BBICPorOT4)
+nrow(SSA_BBICsSpaOT4)
+nrow(SSA_BBICsSpaOT1)
+nrow(SSA_BBICnSpaOT4)
+
+nrow(WASpaOT3)
+nrow(WAScoOT3)
+nrow(GNSNetBT3)
+nrow(GNSIntOT3)
+nrow(GNSIntOT1)
+nrow(GNSGerBT3)
+nrow(GNSFraOT4)
+nrow(GNSEngBT3)
+nrow(BBICsSpaOT4)
+nrow(BBICsSpaOT1)
+nrow(BBICnSpaOT4)
+nrow(BBICPorOT4)
+nrow(CSBBFraOT4)
+summary(as.factor(CSBBFraOT4$Survey_Acronym))
+nrow(CSNIrOT4)
+nrow(CSNIrOT1)
+nrow(CSIreOT4)
+nrow(CSScoOT4)
+nrow(CSScoOT1)
+nrow(CSEngBT3)
+
+
+# All adding up except the Scots hauls that simon doesnt like 
+
+length(unique(dat10$HaulID))
+length(unique(Baseline_SSA$HaulID))
+sum(dat10$Number)
+sum(Baseline_SSA$Number)
+sum(dat10$DensAbund_N_sqkm)
+sum(Baseline_SSA$DensAbund_N_sqkm)
+sum(Baseline_Full_GNSIntOT1$Number)
+sum(Baseline_SSA_GNSIntOT1$Number)
+sum(Baseline_Full_GNSIntOT1$DensAbund_N_sqkm)
+sum(Baseline_SSA_GNSIntOT1$DensAbund_N_sqkm)
+sum(dat10$Number)
+sum(dat10$DensAbund_N_sqkm)
+sum(Knn_Biological_sum$Number)
+sum(Knn_Biological_sum$DensAbund_N_sqkm)
+names(dat9)
+summary(as.factor(dat9$Survey_Acronym))
+sum(dat9$DensAbund_N_sqkm)
+sum(dat$DensAbund_N_sqkm)
+sum(dat9$Number)
+sum(dat$Number)
+# BBIC(n)SpaOT4 91899  
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="BBIC(n)SpaOT4"])
+sum(dat9$DensAbund_N_sqkm[dat$Survey_Acronym=="BBIC(n)SpaOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="BBIC(n)SpaOT4"])
+sum(dat$Number[dat$Survey_Acronym=="BBIC(n)SpaOT4"])
+
+# BBIC(s)SpaOT1  68458   
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="BBIC(s)SpaOT1"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="BBIC(s)SpaOT1"])
+sum(dat9$Number[dat9$Survey_Acronym=="BBIC(s)SpaOT1"])
+sum(dat$Number[dat$Survey_Acronym=="BBIC(s)SpaOT1"])
+# BBIC(s)SpaOT4    69065 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="BBIC(s)SpaOT4"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="BBIC(s)SpaOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="BBIC(s)SpaOT4"])
+sum(dat$Number[dat$Survey_Acronym=="BBIC(s)SpaOT4"])
+# BBICPorOT4   50147 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="BBICPorOT4"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="BBICPorOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="BBICPorOT4"])
+sum(dat$Number[dat$Survey_Acronym=="BBICPorOT4"])
+# CSBBFraOT4        369598  
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="CSBBFraOT4"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="CSBBFraOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="CSBBFraOT4"])
+sum(dat$Number[dat$Survey_Acronym=="CSBBFraOT4"])
+# CSEngBT3      219446 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="CSEngBT3"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="CSEngBT3"])
+sum(dat9$Number[dat9$Survey_Acronym=="CSEngBT3"])
+sum(dat$Number[dat$Survey_Acronym=="CSEngBT3"])
+# CSIreOT4       374572
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="CSIreOT4"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="CSIreOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="CSIreOT4"])
+sum(dat$Number[dat$Survey_Acronym=="CSIreOT4"])
+# CSNIrOT1        183519 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="CSNIrOT1"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="CSNIrOT1"])
+sum(dat9$Number[dat9$Survey_Acronym=="CSNIrOT1"])
+sum(dat$Number[dat$Survey_Acronym=="CSNIrOT1"])
+# CSNIrOT4      148953 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="CSNIrOT4"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="CSNIrOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="CSNIrOT4"])
+sum(dat$Number[dat$Survey_Acronym=="CSNIrOT4"])
+# CSScoOT1      277381  
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="CSScoOT1"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="CSScoOT1"])
+sum(dat9$Number[dat9$Survey_Acronym=="CSScoOT1"])
+sum(dat$Number[dat$Survey_Acronym=="CSScoOT1"])
+# CSScoOT4    225321 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="CSScoOT4"&dat9$Year>1994,])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="CSScoOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="CSScoOT4"&dat9$Year>1994,])
+sum(dat$Number[dat$Survey_Acronym=="CSScoOT4"])
+# GNSEngBT3      130979  
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="GNSEngBT3"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="GNSEngBT3"])
+sum(dat9$Number[dat9$Survey_Acronym=="GNSEngBT3"])
+sum(dat$Number[dat$Survey_Acronym=="GNSEngBT3"])
+# GNSFraOT4       143692   
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="GNSFraOT4"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="GNSFraOT4"])
+sum(dat9$Number[dat9$Survey_Acronym=="GNSFraOT4"])
+sum(dat$Number[dat$Survey_Acronym=="GNSFraOT4"])
+# GNSGerBT3     58066 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="GNSGerBT3"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="GNSGerBT3"])
+sum(dat9$Number[dat9$Survey_Acronym=="GNSGerBT3"])
+sum(dat$Number[dat$Survey_Acronym=="GNSGerBT3"])
+# GNSIntOT1     1452190
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="GNSIntOT1"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="GNSIntOT1"])
+sum(dat9$Number[dat9$Survey_Acronym=="GNSIntOT1"])
+sum(dat$Number[dat$Survey_Acronym=="GNSIntOT1"])
+# GNSIntOT3         737207 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="GNSIntOT3"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="GNSIntOT3"])
+sum(dat9$Number[dat9$Survey_Acronym=="GNSIntOT3"])
+sum(dat$Number[dat$Survey_Acronym=="GNSIntOT3"])
+# GNSNetBT3      290751
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="GNSNetBT3"&dat9$Year>1998])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="GNSNetBT3"])
+sum(dat9$Number[dat9$Survey_Acronym=="GNSNetBT3"&dat9$Year>1998])
+sum(dat$Number[dat$Survey_Acronym=="GNSNetBT3"])
+# WAScoOT3  65301 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="WAScoOT3"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="WAScoOT3"])
+sum(dat9$Number[dat9$Survey_Acronym=="WAScoOT3"])
+sum(dat$Number[dat$Survey_Acronym=="WAScoOT3"])
+# WASpaOT3   203780 
+sum(dat9$DensAbund_N_sqkm[dat9$Survey_Acronym=="WASpaOT3"])
+sum(dat$DensAbund_N_sqkm[dat$Survey_Acronym=="WASpaOT3"])
+sum(dat9$Number[dat9$Survey_Acronym=="WASpaOT3"])
+sum(dat$Number[dat$Survey_Acronym=="WASpaOT3"])
+
+9270437781-9130717074
+find<-subset(dat9, dat9$Number<1 & dat9$FishLength_cm==0,)
+summary(as.factor(find$Survey_Acronym))
+################ 1 GNSGerBT3 ################
+length(unique(Baseline_Full_GNSGerBT3$HaulID))
+length(unique(kNN_GNSGerBT3$HaulID))
+sum(Baseline_Full_GNSGerBT3$DensAbund_N_sqkm)
+sum(Baseline_Full_GNSGerBT3$Number)
+sum(kNN_GNSGerBT3$DensAbund_N_sqkm)
+sum(kNN_GNSGerBT3$Number)
+################### 2. GNSNetBT3" ##################
+length(unique(Baseline_Full_GNSNetBT3$HaulID))
+length(unique(kNN_GNSNetBT3$HaulID))
+sum(Baseline_Full_GNSNetBT3$DensAbund_N_sqkm)
+sum(kNN_GNSNetBT3$DensAbund_N_sqkm)
+sum(Baseline_Full_GNSNetBT3$Number)
+sum(kNN_GNSNetBT3$Number)
+################## 3. GNSEngBT3" ##################
+length(unique(Baseline_Full_GNSEngBT3$HaulID))
+length(unique(kNN_GNSEngBT3$HaulID))
+sum(Baseline_Full_GNSEngBT3$DensAbund_N_sqkm)
+sum(kNN_GNSEngBT3$DensAbund_N_sqkm)
+sum(Baseline_Full_GNSEngBT3$Number)
+sum(kNN_GNSEngBT3$Number)
+################4. GNSIntOT1 ################
+length(unique(Baseline_Full_GNSIntOT1$HaulID))
+length(unique(kNN_GNSIntOT1$HaulID))
+sum(Baseline_Full_GNSIntOT1$DensAbund_N_sqkm)
+sum(kNN_GNSIntOT1$DensAbund_N_sqkm)
+sum(Baseline_Full_GNSIntOT1$Number)
+sum(kNN_GNSIntOT1$Number)
+################# 5. GNSIntOT3 #################
+length(unique(Baseline_Full_GNSIntOT3$HaulID))
+length(unique(kNN_GNSIntOT3$HaulID))
+sum(Baseline_Full_GNSIntOT3$DensAbund_N_sqkm)
+sum(kNN_GNSIntOT3$DensAbund_N_sqkm)
+sum(Baseline_Full_GNSIntOT3$Number)
+sum(kNN_GNSIntOT3$Number)
+################## 6 .GNSFraOT4  ##################
+length(unique(Baseline_Full_GNSFraOT4$HaulID))
+length(unique(kNN_GNSFraOT4$HaulID))
+sum(Baseline_Full_GNSFraOT4$DensAbund_N_sqkm)
+sum(kNN_GNSFraOT4$DensAbund_N_sqkm)
+sum(Baseline_Full_GNSFraOT4$Number)
+sum(kNN_GNSFraOT4$Number)
+################ 7. CSEngBT3 ################
+length(unique(Baseline_Full_CSEngBT3$HaulID))
+length(unique(kNN_CSEngBT3$HaulID))
+sum(Baseline_Full_CSEngBT3$DensAbund_N_sqkm)
+sum(kNN_CSEngBT3$DensAbund_N_sqkm)
+sum(Baseline_Full_CSEngBT3$Number)
+sum(kNN_CSEngBT3$Number)
+################ 8. CSScoOT1 ################
+length(unique(Baseline_Full_CSScoOT1$HaulID))
+length(unique(kNN_CSScoOT1$HaulID))
+sum(Baseline_Full_CSScoOT1$DensAbund_N_sqkm)
+sum(kNN_CSScoOT1$DensAbund_N_sqkm)
+sum(Baseline_Full_CSScoOT1$Number)
+sum(kNN_CSScoOT1$Number)
+################ 9. CSScoOT4 ################
+length(unique(Baseline_Full_CSScoOT4$HaulID))
+length(unique(kNN_CSScoOT4$HaulID))
+sum(Baseline_Full_CSScoOT4$DensAbund_N_sqkm)
+sum(kNN_CSScoOT4$DensAbund_N_sqkm)
+sum(Baseline_Full_CSScoOT4$Number)
+sum(kNN_CSScoOT4$Number)
+################# 10. CSIreOT4 #################
+length(unique(Baseline_Full_CSIreOT4$HaulID))
+length(unique(kNN_CSIreOT4$HaulID))
+sum(Baseline_Full_CSIreOT4$DensAbund_N_sqkm)
+sum(kNN_CSIreOT4$DensAbund_N_sqkm)
+sum(Baseline_Full_CSIreOT4$Number)
+sum(kNN_CSIreOT4$Number)
+################# 11. CSNIrOT1 #################
+length(unique(Baseline_Full_CSNIrOT1$HaulID))
+length(unique(kNN_CSNIrOT1$HaulID))
+sum(Baseline_Full_CSNIrOT1$DensAbund_N_sqkm)
+sum(kNN_CSNIrOT1$DensAbund_N_sqkm)
+sum(Baseline_Full_CSNIrOT1$Number)
+sum(kNN_CSNIrOT1$Number)
+################# 12. CSNIrOT4 #################
+length(unique(Baseline_Full_CNNIrOT4$HaulID))
+length(unique(kNN_CSNIrOT4$HaulID))
+sum(Baseline_Full_CNNIrOT4$DensAbund_N_sqkm)
+sum(kNN_CSNIrOT4$DensAbund_N_sqkm)
+sum(Baseline_Full_CNNIrOT4$Number)
+sum(kNN_CSNIrOT4$Number)
+###################13. CS/BBFraOT4 ###################
+length(unique(Baseline_Full_CSBBFraOT4$HaulID))
+length(unique(kNN_CSBBFraOT4$HaulID))
+sum(Baseline_Full_CSBBFraOT4$DensAbund_N_sqkm)
+sum(kNN_CSBBFraOT4$DensAbund_N_sqkm)
+sum(Baseline_Full_CSBBFraOT4$Number)
+sum(kNN_CSBBFraOT4$Number)
+################### 14. BBICPorOT4 ###################
+length(unique(Baseline_Full_BBICPorOT4$HaulID))
+length(unique(kNN_BBICPorOT4$HaulID))
+sum(Baseline_Full_BBICPorOT4$DensAbund_N_sqkm)
+sum(kNN_BBICPorOT4$DensAbund_N_sqkm)
+sum(Baseline_Full_BBICPorOT4$Number)
+sum(kNN_BBICPorOT4$Number)
+################# 15. WAScoOT3 #################
+length(unique(Baseline_Full_WAScoOT3$HaulID))
+length(unique(kNN_WAScoOT3$HaulID))
+sum(Baseline_Full_WAScoOT3$DensAbund_N_sqkm)
+sum(kNN_WAScoOT3$DensAbund_N_sqkm)
+sum(Baseline_Full_WAScoOT3$Number)
+sum(kNN_WAScoOT3$Number)
+####################16 BBIC(n)SpaOT4 ####################
+length(unique(Baseline_Full_BBICnSpaOT4$HaulID))
+length(unique(kNN_NSpa4$HaulID))
+sum(Baseline_Full_BBICnSpaOT4$DensAbund_N_sqkm)
+sum(kNN_NSpa4$DensAbund_N_sqkm)
+sum(Baseline_Full_BBICnSpaOT4$Number)
+sum(kNN_NSpa4$Number)
+####################17 BBIC(s)SpaOT1 ####################
+length(unique(Baseline_Full_BBICsSpaOT1$HaulID))
+length(unique(kNN_sspa1$HaulID))
+sum(Baseline_Full_BBICsSpaOT1$DensAbund_N_sqkm)
+sum(kNN_sspa1$DensAbund_N_sqkm)
+sum(Baseline_Full_BBICsSpaOT1$Number)
+sum(kNN_sspa1$Number)
+####################18 BBIC(s)SpaOT4 ####################
+length(unique(Baseline_Full_BBICsSpaOT4$HaulID))
+length(unique(kNN_sspa4$HaulID))
+sum(Baseline_Full_BBICsSpaOT4$DensAbund_N_sqkm)
+sum(kNN_sspa4$DensAbund_N_sqkm)
+sum(Baseline_Full_BBICsSpaOT4$Number)
+sum(kNN_sspa4$Number)
+###############19 WASpaOT3 ###############
+length(unique(Baseline_Full_WASpaOT3$HaulID))
+length(unique(kNN_WASpaOT3$HaulID))
+sum(Baseline_Full_WASpaOT3$DensAbund_N_sqkm)
+sum(kNN_WASpaOT3$DensAbund_N_sqkm)
+sum(Baseline_Full_WASpaOT3$Number)
+sum(kNN_WASpaOT3$Number)
+###############
+# SSA kNN#
+###############
+length(unique(SSA_kNN_Biological$HaulID))
+length(unique(Baseline_SSA$HaulID))
+sum(SSA_kNN_Biological$Number)
+sum(SSA_kNN_Biological$DensAbund_N_sqkm)
+sum(Baseline_SSA$Number)
+sum(Baseline_SSA$DensAbund_N_sqkm)
+################ 1 GNSGerBT3 ################
+length(unique(V2_kNN_SSA_GNSGerBT3$HaulID))
+length(unique(Baseline_SSA_GNSGerBT3$HaulID))
+sum(V2_kNN_SSA_GNSGerBT3$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_GNSGerBT3$Number)
+sum(Baseline_SSA_GNSGerBT3$DensAbund_N_sqkm)
+sum(Baseline_SSA_GNSGerBT3$Number)
+#Baseline_SSA_GNSGerBT3
+################### 2. GNSNetBT3" ##################
+length(unique(V2_kNN_SSA_GNSNetBT3$HaulID))
+length(unique(Baseline_SSA_GNSNetBT3$HaulID))
+sum(V2_kNN_SSA_GNSNetBT3$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_GNSNetBT3$Number)
+#Baseline_SSA_GNSNetBT3
+sum(Baseline_SSA_GNSNetBT3$DensAbund_N_sqkm)
+sum(Baseline_SSA_GNSNetBT3$Number)
+################## 3. GNSEngBT3" ##################
+length(unique(V2_kNN_SSA_GNSEngBT3$HaulID))
+length(unique(Baseline_SSA_GNSEngBT3$HaulID))
+sum(V2_kNN_SSA_GNSEngBT3$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_GNSEngBT3$Number)
+#Baseline_SSA_GNSEngBT3
+sum(Baseline_SSA_GNSEngBT3$DensAbund_N_sqkm)
+sum(Baseline_SSA_GNSEngBT3$Number)
+################  4. GNSIntOT1"###############
+length(unique(V2_kNN_SSA_GNSIntOT1$HaulID))
+length(unique(Baseline_SSA_GNSIntOT1$HaulID))
+sum(V2_kNN_SSA_GNSIntOT1$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_GNSIntOT1$Number)
+#Baseline_SSA_GNSIntOT1
+sum(Baseline_SSA_GNSIntOT1$DensAbund_N_sqkm)
+sum(Baseline_SSA_GNSIntOT1$Number)
+################# 5. GNSIntOT3 #################
+length(unique(V2_kNN_SSA_GNSIntOT3$HaulID))
+length(unique(Baseline_SSA_GNSIntOT3$HaulID))
+sum(V2_kNN_SSA_GNSIntOT3$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_GNSIntOT3$Number)
+#Baseline_SSA_GNSIntOT3
+sum(Baseline_SSA_GNSIntOT3$DensAbund_N_sqkm)
+sum(Baseline_SSA_GNSIntOT3$Number)
+################## 6. GNSFraOT4  ##################
+length(unique(V2_kNN_SSA_GNSFraOT4$HaulID))
+length(unique(Baseline_SSA_GNSFraOT4$HaulID))
+sum(V2_kNN_SSA_GNSFraOT4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_GNSFraOT4$Number)
+#Baseline_SSA_GNSFraOT4
+sum(Baseline_SSA_GNSFraOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_GNSFraOT4$Number)
+################ 7. CSEngBT3 ###############
+length(unique(V2_kNN_SSA_CSEngBT3$HaulID))
+length(unique(Baseline_SSA_CSEngBT3$HaulID))
+sum(V2_kNN_SSA_CSEngBT3$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_CSEngBT3$Number)
+#Baseline_SSA_CSEngBT3
+sum(Baseline_SSA_CSEngBT3$DensAbund_N_sqkm)
+sum(Baseline_SSA_CSEngBT3$Number)
+################ 8. CSScoOT1 ################
+length(unique(V2_kNN_SSA_CSScoOT1$HaulID))
+length(unique(Baseline_SSA_CSScoOT1$HaulID))
+sum(V2_kNN_SSA_CSScoOT1$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_CSScoOT1$Number)
+#Baseline_SSA_CSScoOT1
+sum(Baseline_SSA_CSScoOT1$DensAbund_N_sqkm)
+sum(Baseline_SSA_CSScoOT1$Number)
+################ 9. CSScoOT4 ################
+length(unique(V2_kNN_SSA_CSScoOT4$HaulID))
+length(unique(Baseline_SSA_CSScoOT4$HaulID))
+sum(V2_kNN_SSA_CSScoOT4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_CSScoOT4$Number)
+#Baseline_SSA_CSScoOT4
+sum(Baseline_SSA_CSScoOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_CSScoOT4$Number)
+################# 10. CSIreOT4 #################
+length(unique(V2_kNN_SSA_CSIreOT4$HaulID))
+length(unique(Baseline_SSA_CSIreOT4$HaulID))
+sum(V2_kNN_SSA_CSIreOT4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_CSIreOT4$Number)
+#Baseline_SSA_CSIreOT4
+sum(Baseline_SSA_CSIreOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_CSIreOT4$Number)
+################# 11. CSNIrOT1 #################
+length(unique(V2_kNN_SSA_CSNIrOT1$HaulID))
+length(unique(Baseline_SSA_CSNIrOT1$HaulID))
+sum(V2_kNN_SSA_CSNIrOT1$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_CSNIrOT1$Number)
+#Baseline_SSA_CSNIrOT1
+sum(Baseline_SSA_CSNIrOT1$DensAbund_N_sqkm)
+sum(Baseline_SSA_CSNIrOT1$Number)
+################# 12. CSNIrOT4 #################
+length(unique(V2_kNN_SSA_CSNIrOT4$HaulID))
+length(unique(Baseline_SSA_CNNIrOT4$HaulID))
+sum(V2_kNN_SSA_CSNIrOT4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_CSNIrOT4$Number)
+#Baseline_SSA_CNNIrOT4
+sum(Baseline_SSA_CNNIrOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_CNNIrOT4$Number)
+###################13. CS/BBFraOT4 ###################
+length(unique(Baseline_SSA_CSBBFraOT4$HaulID))
+length(unique(V2_kNN_SSA_CSBBFraOT4$HaulID))
+sum(V2_kNN_SSA_CSBBFraOT4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_CSBBFraOT4$Number)
+#Baseline_SSA_CSBBFraOT4
+sum(Baseline_SSA_CSBBFraOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_CSBBFraOT4$Number)
+################### 14. BBICPorOT4 ###################
+length(unique(V2_kNN_SSA_BBICPorOT4$HaulID))
+length(unique(Baseline_SSA_BBICPorOT4$HaulID))
+sum(V2_kNN_SSA_BBICPorOT4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_BBICPorOT4$Number)
+#Baseline_SSA_BBICPorOT4
+sum(Baseline_SSA_BBICPorOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_BBICPorOT4$Number)
+################ 15. WAScoOT3 ################
+length(unique(V2_kNN_SSA_WAScoOT3$HaulID))
+length(unique(Baseline_SSA_WAScoOT3$HaulID))
+sum(V2_kNN_SSA_WAScoOT3$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_WAScoOT3$Number)
+#Baseline_SSA_WAScoOT3
+sum(Baseline_SSA_WAScoOT3$DensAbund_N_sqkm)
+sum(Baseline_SSA_WAScoOT3$Number)
+####################16 BBIC(n)SpaOT4 ####################
+length(unique(V2_kNN_SSA_NSpa4$HaulID))
+length(unique(Baseline_SSA_BBICnSpaOT4$HaulID))
+sum(V2_kNN_SSA_NSpa4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_NSpa4$Number)
+#Baseline_SSA_BBICnSpaOT4
+sum(Baseline_SSA_BBICnSpaOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_BBICnSpaOT4$Number)
+####################17 BBIC(s)SpaOT1 ####################
+length(unique(V2_kNN_SSA_sspa1$HaulID))
+length(unique(Baseline_SSA_BBICsSpaOT1$HaulID))
+sum(V2_kNN_SSA_sspa1$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_sspa1$Number)
+#Baseline_SSA_BBICsSpaOT1
+sum(Baseline_SSA_BBICsSpaOT1$DensAbund_N_sqkm)
+sum(Baseline_SSA_BBICsSpaOT1$Number)
+####################18 BBIC(s)SpaOT4 ###################
+length(unique(V2_kNN_SSA_sspa4$HaulID))
+length(unique(Baseline_SSA_BBICsSpaOT4$HaulID))
+sum(V2_kNN_SSA_sspa4$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_sspa4$Number)
+#Baseline_SSA_BBICsSpaOT4
+sum(Baseline_SSA_BBICsSpaOT4$DensAbund_N_sqkm)
+sum(Baseline_SSA_BBICsSpaOT4$Number)
+###############19 WASpaOT3 ###############
+length(unique(Baseline_SSA_WASpaOT3$HaulID))
+length(unique(V2_kNN_SSA_WASpaOT3$HaulID))
+sum(V2_kNN_SSA_WASpaOT3$DensAbund_N_sqkm)
+sum(V2_kNN_SSA_WASpaOT3$Number)
+#Baseline_SSA_WASpaOT3
+sum(Baseline_SSA_WASpaOT3$DensAbund_N_sqkm)
+sum(Baseline_SSA_WASpaOT3$Number)
+
+
+names(dat10)
+summary(as.factor(dat10$RecordStatus))
+find1<-subset(dat10, RecordStatus=="LFD")
+                     
+find2<-subset(kNN_sspa4, SpeciesSciName=="Nezumia sclerorhynchus")      
+
+
+find_diff1<-setdiff(Baseline_SSA_BBICsSpaOT4,V2_kNN_SSA_sspa4)
+find_diff<-setdiff(V2_kNN_SSA_sspa4, Baseline_SSA_BBICsSpaOT4)
