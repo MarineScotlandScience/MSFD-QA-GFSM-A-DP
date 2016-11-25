@@ -1,11 +1,7 @@
-###################
-# Version Control #
-###################
+#################### Version Control ####################
 # R version 3.2.2 (2015-08-14): Fire Safety 
 # platform       x86_64-w64-mingw32 (64-bit)
-###############
-# Script Info #
-###############
+############### Script Info ###############
 # This is Script 7 of 9
 # We now correct the biological data for each of the surveys
 # AUTHOR: Meadhbh Moriarty, 2016
@@ -23,16 +19,12 @@
 # 3. Correct known errors in the biological files
 # 4. Make global changes to the data, eg standardise length codes used.
 # 5. Prepare BASELINE DATA (All steps except k-NN)
-############
-# PACKAGES #
-############
+############# PACKAGES #############
 list<-c("ggplot2", "data.table", "reshape2", "arm","car", "DMwR", "lme4", "plyr",
         "marmap", "plotrix", "colorspace", "plot3D", "plot3D", "rgl","MuMIn",
         "mapplots", "class")
 lapply(list, require, character.only=T)
-################
-# HouseKeeping #
-################
+################# HouseKeeping #################
 #boost memory for species stuff
 memory.size(10000000000000)
 memory.limit()
@@ -48,13 +40,13 @@ setdiff(checkhl1, checkhaul)
 setdiff(checkhaul, checkhl1)
 # All New_UniqueID match - good news as I'll need to merge both together 
 ########################### 
-# 4.2.1 Initial Screening #
+# 4.2.2 Initial Screening #
 ###########################
 # Step 1: Resolving Species unique ID is in a seperate code - requires different 
 # version of R
 # I need to bring in an external file of preprepared fish life history info and 
 # taxonomic resolution data
-traits<-read.csv("./Data/Fish_traits_products/Species_List_05-10-2016.csv")
+traits<-read.csv("./Raw_Data/Fish_traits_products/Species_List_Final.csv")
 # This file contains information about the Classes of fish that we are interested in
 #########################
 # Combine relevant data #
@@ -94,10 +86,11 @@ setdiff(checkhaul, checkdat3)
 # write a table to save the all the information
 write.table(hauls1, "Haul_Information_05-10-2016.csv", sep=",")
 write.table(dat2, "Fish_Species_Data_05_10_2016.csv", sep=",") 
-
+str(kNN_GNSFraOT4)
+dat2<-read.csv("Fish_Species_Data_05_10_2016.csv")
 names(dat2)
 # remove any SpecVal==0, these P/A values are rubbish - connect to the CA records
-find<-subset(dat2, SpecVal==0, )
+find<-subset(dat2, SpecVal==0, )  
 # no O SpecVal
 summary(dat2$phylum)
 
@@ -108,18 +101,22 @@ keepers<-c("ValidAphiaID","New_UniqueID", "Survey.x","Quarter.x","Country.x",
            "SubWgt","CatCatchWgt","LngtCode","LngtClass", "HLNoAtLngt", "HaulDur",
            "DayNight","ShootLat","ShootLong","StatRec","HaulVal","StdSpecRecCode",
            "BycSpecRecCode", "DataType", "month", "DepthNew","SweptArea_wing_m_sqrd",
-           "SweptArea_wing_km_sqrd", "QualityWing_SweptArea","valid_name","CLASS",                     
+           "SweptArea_wing_km_sqrd", "valid_name","CLASS",                     
            "order","family","genus","rank","FRS_Common.Name","LmaxFB","LWRa","SubFactor") 
-dat2<-as.data.table(dat2)
+dat3<-as.data.table(dat2)
+summary(dat2$HLNoAtLngt)
+summary(dat2$TotalNo)
 dat3<-dat2[keepers]
-dat3<-subset(dat2,
+summary(dat3$HLNoAtLngt)
+summary(dat3$TotalNo)
+dat3<-subset(dat3,
              select=c(ValidAphiaID, New_UniqueID, Survey.x, Quarter.x, Country.x,
                      Ship.x, Gear.x, StNo.x, HaulNo.x, Year.x, SpecCodeType,
                      SpecCode, SpecVal, Sex, TotalNo, CatIdentifier, NoMeas,  
                      SubWgt, CatCatchWgt, LngtCode, LngtClass, HLNoAtLngt, HaulDur,
                      DayNight, ShootLat, ShootLong, StatRec, HaulVal, StdSpecRecCode,
                      BycSpecRecCode, DataType, month, DepthNew, SweptArea_wing_m_sqrd,
-                     SweptArea_wing_km_sqrd, QualityWing_SweptArea, valid_name, CLASS,                     
+                     SweptArea_wing_km_sqrd, valid_name, CLASS,                     
                      order, family, genus, rank, LmaxFB, LWRa,SubFactor))
 #remove the .x part of the names
 dat3$Survey<-dat3$Survey.x
@@ -140,11 +137,12 @@ dat3$StNo.x<-NULL
 dat3$HaulNo.x<-NULL
 dat3$Year.x<-NULL
 # set up numeric cols
-dat3<-as.data.table(dat3)
-numCols <- c("HaulNo", "HaulDur", "ShootLat", "ShootLong", "DepthNew","TotalNo",
-             "NoMeas","SubWgt","CatCatchWgt","LngtClass", "HLNoAtLngt",
-             "SweptArea_wing_m_sqrd","SweptArea_wing_km_sqrd","LmaxFB","LWRa")
-dat3[, (numCols) := lapply(.SD, as.numeric), .SDcols = numCols]
+str(dat3)
+#dat3<-as.data.table(dat3)
+#numCols <- c("HaulNo", "HaulDur", "ShootLat", "ShootLong", "DepthNew","TotalNo",
+#             "NoMeas","SubWgt","CatCatchWgt","LngtClass", "HLNoAtLngt",
+#             "SweptArea_wing_m_sqrd","SweptArea_wing_km_sqrd","LmaxFB","LWRa")
+#dat3[, (numCols) := lapply(.SD, as.numeric), .SDcols = numCols]
 ############################## 
 # 4.2.2 Taxonomic ID protocol#
 ##############################
@@ -853,9 +851,9 @@ dat3$SpeciesQualityCode[dat3$valid_name=="Spratelloides lewisi"]<-"Spp_to_genus"
 find<-dat3[is.na(dat3$estrank)]
 summary(dat3$estsciname)
 # save a copy of hauls and biology
-write.csv(dat3, "dat3_06-10-2016.csv")
-write.csv(hauls1, "hauls1_06-10-2016.csv")
-dat4<-read.csv("dat3_06-10-2016.csv", header=TRUE, stringsAsFactors = FALSE)
+write.csv(dat3, "dat3_11-11-2016.csv")
+write.csv(hauls1, "hauls1_11-11-2016.csv")
+dat4<-read.csv("dat3_11-11-2016.csv", header=TRUE, stringsAsFactors = FALSE)
 dat4$estsciname[dat4$valid_name=="Leucoraja lentiginosa"]<-"Leucoraja"
 dat4$estsciname[dat4$valid_name=="Spratelloides lewisi"]<-"Spratelloides"
 dat4$estsciname[dat4$valid_name=="Nezumia bairdii"]<-"Nezumia"
@@ -923,22 +921,30 @@ dat4$HLNoAtLngt[dat4$HLNoAtLngt=="-9"]<-"0"
 dat4$TotalNo[dat4$TotalNo=="-9"]<-"0"
 dat4$TotalNo[is.na(dat4$TotalNo)]<-"0"
 dat4$HLNoAtLngt[is.na(dat4$HLNoAtLngt)]<-"0"
+summary(as.numeric(dat4$HLNoAtLngt))
+summary(as.numeric(dat4$TotalNo))
 #dat4$HLNoAtLngt<-as.numeric(dat4$HLNoAtLngt)
+summary(as.numeric(dat4$TotalNo))
+summary(as.numeric(dat4$HLNoAtLngt))
 
 dat4$TotalNo_N<-as.numeric(dat4$TotalNo)
+summary(dat4$HLNoAtLngt_N)
+dat4$HLNoAtLngt_N[(dat4$HLNoAtLngt_N<0)]<-0
 dat4$NewTotalNo[dat4$DataType=="R"]<-dat4$TotalNo_N[dat4$DataType=="R"]
 dat4$NewTotalNo[dat4$DataType=="S"]<-dat4$TotalNo_N[dat4$DataType=="S"]
 dat4$NewTotalNo[dat4$DataType=="C"]<-(dat4$TotalNo_N[dat4$DataType=="C"])/60*dat4$HaulDur[dat4$DataType=="C"]
 dat4$NewHLNoAtLngt[dat4$DataType=="R"]<-dat4$HLNoAtLngt_N[dat4$DataType=="R"]
 dat4$SubFactor<-as.numeric(dat4$SubFactor)
 summary(dat4$SubFactor)
+
 dat4$NewHLNoAtLngt[dat4$DataType=="S"]<-dat4$HLNoAtLngt_N[dat4$DataType=="S"]*dat4$SubFactor[dat4$DataType=="S"]
 dat4$NewHLNoAtLngt[dat4$DataType=="R"]<-dat4$HLNoAtLngt_N[dat4$DataType=="R"]*dat4$SubFactor[dat4$DataType=="R"]
 dat4$NewHLNoAtLngt[dat4$DataType=="C"]<-(dat4$HLNoAtLngt_N[dat4$DataType=="C"])/60*dat4$HaulDur[dat4$DataType=="C"]
 summary(as.numeric(dat4$NewTotalNo))
-dat4$NewHLNoAtLngt[is.na(dat4$NewHLNoAtLngt)]<-0
+dat4$NewHLNoAtLngt[is.na(dat4$HLNoAtLngt_N)]<-0
 summary(as.numeric(dat4$NewHLNoAtLngt))
-dat4$NoMeas<-as.numeric(dat4$NoMeas)
+summary(dat4$NewTotalNo)
+#dat4$NoMeas<-as.numeric(dat4$NoMeas)
 summary(dat4$NoMeas)
 # Lets take a closer look at S cat.
 names(dat4)
@@ -949,7 +955,7 @@ dat4$NewDataType[dat4$DataType=="S"]<-"RS"
 dat4$NewDataType[dat4$DataType=="S"&dat4$SubFactor==1]<-"R"
 summary(as.factor(dat4$NewDataType))
 
-summary(as.numeric(dat4$NewTotalNo))
+summary((dat4$NewTotalNo))
 dat4$NewTotalNo[is.na(dat4$NewTotalNo)]<-0
 # 6524 say they have a subfactor but in reality there are more Subfactors 
 # in R
@@ -997,23 +1003,28 @@ summary(as.factor(dat4$Est_HaulDur_flag))
 #dat4$HLNoAtLngt<-as.numeric(dat4$HLNoAtLngt)
 dat4$NewHLNoAtLngt_round<-round(dat4$NewHLNoAtLngt)
 dat4$NewTotalNo_roundup<-ceiling(dat4$NewTotalNo)
-dat4$SweptArea_wing_km_sqrd<-as.numeric(dat4$SweptArea_wing_km_sqrd)
+#dat4$SweptArea_wing_km_sqrd<-as.numeric(dat4$SweptArea_wing_km_sqrd)
 dat4[!is.na(NewHLNoAtLngt), c("HLNoAtLngtkm2") :=
       list(NewHLNoAtLngt/SweptArea_wing_km_sqrd)] 
 dat4[!is.na(NewTotalNo), c("TotalNoKm2"):=
       list(NewTotalNo/SweptArea_wing_km_sqrd)]
 summary(dat4$TotalNoKm2)
 summary(dat4$HLNoAtLngtkm2)
-dat4[!is.na(HLNoAtLngtkm2), c("HLNoATLngt_Derived"):=
-      list(HLNoAtLngtkm2*SweptArea_wing_km_sqrd)]
-dat4[!is.na(TotalNoKm2), c("TotalNoKm2_Derived"):=
-      list(TotalNoKm2*SweptArea_wing_km_sqrd)]
-find<-subset(dat4, dat4$NewHLNoAtLngt_round> dat4$NewTotalNo_roundup,)
+#dat4[!is.na(HLNoAtLngtkm2), c("HLNoATLngt_Derived"):=
+#      list(HLNoAtLngtkm2*SweptArea_wing_km_sqrd)]
+#dat4[!is.na(TotalNoKm2), c("TotalNoKm2_Derived"):=
+#      list(TotalNoKm2*SweptArea_wing_km_sqrd)]
+#find<-subset(dat4, dat4$NewHLNoAtLngt_round> dat4$NewTotalNo_roundup,)
+dat4$NewHLNoAtLngt_round<-NULL
+dat4$NewTotalNo_roundup<-NULL
 #Still some differences between total number and highter no at length measured
 # what a total mess
 
-dat4$DensNsqkm<-dat4$HLNoAtLngtkm2
-summary(dat4$HLNoAtLngtkm2)
+dat4$Density_Km2<-dat4$HLNoAtLngtkm2
+dat4$Density_Km2[dat4$HLNoAtLngtkm2==0]<-dat4$TotalNoKm2[dat4$HLNoAtLngtkm2==0]
+summary(dat4$Density_Km2)
+find<-subset(dat4, Density_Km2==0, )
+# I will address theses 62 fish later on in code
 #######################
 # Insure Length is TL #
 #######################
@@ -1034,8 +1045,6 @@ dat4$LengthType[dat4$family=="Macrouridae"&dat4$Survey=="NS-IBTS"&dat4$Year<1999
 dat4$LengthType[dat4$family=="Macrouridae"&dat4$Survey=="SP_ARSA"&dat4$Year<2000]<-"TL"
 dat4$LengthType[dat4$family=="Macrouridae"&dat4$Survey=="SP_PORC"&dat4$Year<2000]<-"TL"
 dat4$LengthType[dat4$family=="Macrouridae"&dat4$Survey=="SPNGFSC"&dat4$Year<2000]<-"TL"
-
-
 # Hymenocephalus italicus is TL Mindel et al 2015
 dat4$LengthType[dat4$estsciname=="Hymenocephalus italicus"&
                   dat4$LengthType=="PAFL"]<-"TL"
@@ -1078,9 +1087,7 @@ dat4$LengthType[dat4$estsciname=="Trachyrincus scabrus"&
                   dat4$Survey=="SP_PORC"]<-"TL"
 # Macrouridae Mindel et al 2015
 dat4$LengthType[dat4$estsciname=="Macrouridae"&dat4$LengthType=="PAFL"]<-"TL"
-##############
-# PAFL to TL #
-##############
+############### PAFL to TL ###############
 # Total Length converter for COC (Coelorinchus caelorhincus) is *2.82
 # Total Length converter for MLA (Malacocephalus laevis) is *4.57
 summary(as.factor(dat4$LengthType))
@@ -1091,20 +1098,20 @@ write.csv(PAFL_fish, "PAFL_fish_07-10-2016.csv")
 # The palette with black:
 cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#FFFF00")
 
-ggplot(PAFL_fish, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(PAFL_fish, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
   theme_classic()
 
-ggplot(PAFL_fish, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(PAFL_fish, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~valid_name, scales="free", ncol=4)+
   theme_classic()
 # look closer at Trachyrincus scabrus
 find<-subset(PAFL_fish, estsciname=="Trachyrincus scabrus",)
-ggplot(find, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(find, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
@@ -1124,7 +1131,7 @@ dat4$LengthType[dat4$estsciname=="Trachyrincus murrayi"&
                   dat4$LengthType=="PAFL"]<-"TL"
 # look closer at Nezumia aequalis
 find<-subset(PAFL_fish, estsciname=="Nezumia aequalis",)
-ggplot(find, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(find, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
@@ -1150,7 +1157,7 @@ dat4$LengthType[dat4$estsciname=="Nezumia"&
                   dat4$LengthType=="PAFL"]<-"TL"
 # look closer at Coelorinchus caelorhincus
 find<-subset(PAFL_fish, estsciname=="Coelorinchus caelorhincus",)
-ggplot(find, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(find, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
@@ -1163,7 +1170,7 @@ dat4$LengthType[dat4$estsciname=="Coelorinchus caelorhincus"&
                   dat4$LengthType=="PAFL"]<-"TL"
 # look closer at Malacocephalus laevis
 find<-subset(PAFL_fish, estsciname=="Malacocephalus laevis",)
-ggplot(find, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(find, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
@@ -1184,7 +1191,7 @@ dat4$LengthType[dat4$estsciname=="Macrourus berglax"&
 
 # Atkinson 1981 -Coryphaenoides rupestris
 find<-subset(PAFL_fish, estsciname=="Coryphaenoides rupestris",)
-ggplot(find, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(find, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
@@ -1204,9 +1211,7 @@ dat4$LengthType[dat4$estsciname=="Coelorinchus labiatus"&
                   dat4$LengthType=="PAFL"]<-"TL"
 
 summary(as.factor(dat4$LengthType))
-###########
-# SL to TL#
-###########
+############ SL to TL############
 SL_fish<-subset(dat4, LengthType=="SL",)
 summary(as.factor(SL_fish$estsciname))
 ## Xenodermichthys copei
@@ -1232,19 +1237,17 @@ dat4$FishLength_cm[dat4$estsciname=="Alepocephalidae"&
                                                                        dat4$LengthType=="SL"]
 dat4$LengthType[dat4$estsciname=="Alepocephalidae"&
                   dat4$LengthType=="SL"]<-"TL"
-##############
-# PSCFL to TL#
-##############
+############### PSCFL to TL###############
 PSCFL_fish<-subset(dat4, LengthType=="PSCFL",)
 write.csv(PSCFL_fish, "PSCFL_fish_07-10-2016.csv")
 summary(as.factor(PSCFL_fish$estsciname))
-ggplot(PSCFL_fish, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(PSCFL_fish, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
   theme_classic()
 
-ggplot(PSCFL_fish, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(PSCFL_fish, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ estsciname, scales="free", ncol=1)+
@@ -1263,19 +1266,19 @@ summary(as.factor(dat4$LengthType))
 
 find<-dat4[ which(dat4$FishLength_cm > dat4$newLngtClass),]
 summary(as.factor(find$estsciname))
-ggplot(find, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(find, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ estsciname, scales="free", ncol=4)+
   theme(text = element_text(size=20),
         axis.text.x = element_text(vjust=1))
-ggplot(find, aes(x=FishLength_cm, y=DensNsqkm, color=Survey, cex=1))+
+ggplot(find, aes(x=FishLength_cm, y=Density_Km2, color=Survey, cex=1))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ estsciname, scales="free", ncol=4)+
   theme(text = element_text(size=20),
         axis.text.x = element_text(vjust=1))
-ggplot(find, aes(x=newLngtClass, y=DensNsqkm, color=Survey))+
+ggplot(find, aes(x=newLngtClass, y=Density_Km2, color=Survey))+
   scale_colour_manual(values=cbbPalette)+
   geom_point()+
   facet_wrap(~ Year, scales="free", ncol=4)+
@@ -2577,10 +2580,10 @@ nrow(dat4)-nrow(dat5)
 names(dat5)
 
 test1<-dat5[which(dat5$newLngtClass > dat5$LmaxFB*1.1),]
-# 1899 observations 
+# 1962 observations 
 
 test2<-dat5[which(dat5$newLngtClass > dat5$LmaxFB*1.4),]
-# 235 observations
+# 354 observations
 summary(as.factor(test2$Country))
 summary(as.factor(test2$estsciname))
 summary(as.factor(test2$estrank))
@@ -3083,7 +3086,9 @@ dat6$FishLength_cm_below[dat6$estsciname=="Micromesistius poutassou" &
 # Copy the working file
 write.csv(dat6, "dat6_workingHL_11-10-2016.csv")
 #
+dat6<-read.csv("dat6_workingHL_11-10-2016.csv")
 find<-subset(dat6, dat6$New_UniqueID=="NS-IBTS/2005/1/DAN2/44/GOV")
+
 dat6$FishLength_cm_below[dat6$New_UniqueID=="NS-IBTS/2005/1/DAN2/44/GOV"&
                            dat6$estsciname=="Spinachia spinachia"&
                            dat6$Filter=="LFD"]<-19
@@ -3163,7 +3168,7 @@ dat6$FishLength_cm_below[dat6$FishLength_cm==20&
 # ADD  FLITER FOR #
 # BASELINE        #
 ###################
-summary(dat6$DensNsqkm)
+summary(dat6$Density_Km2)
 
 summary(as.factor(dat6$SpeciesQualityCode))
 list<-c('Genus_to_spp',  'Recorded_Data', 'Family_to_spp', 'Species_changed')
@@ -3177,7 +3182,7 @@ dat6$Filter[dat6$estsciname=="Ammodytidae"&!dat6$FishLength_cm_below=="0"]<-"OK"
 dat6$Filter[dat6$estsciname=="Gobiidae"&dat6$FishLength_cm_below=="0"]<-"LFD"
 dat6$Filter[dat6$estsciname=="Ammodytidae"&dat6$FishLength_cm_below=="0"]<-"LFD"
 names(dat6)
-dat6$Filter[dat6$FishLength_cm_below=="0"&dat6$DensNsqkm=="0"&dat6$TotalNoKm2==0]<-"CatchWeight"
+dat6$Filter[dat6$FishLength_cm_below=="0"&dat6$Density_Km2=="0"&dat6$TotalNoKm2==0]<-"CatchWeight"
 summary(as.factor(dat6$Filter))
 ###########################
 # 4.2.4 Abundance of Fish #
@@ -3195,15 +3200,36 @@ dat6$SweptArea_wing_m_sqrd<-NULL
 dat6$HaulVal<-NULL
 summary((dat6$FishLength_cm_below))
 summary(dat6$LWRa)
+
 dat7<-subset(dat6, !is.na(LWRa)&!is.na(LWRb)&!LWRa==0&!LWRb==0&!CatCatchWgt_per_km2==0&!HLNoAtLngtkm2==0&!FishLength_cm_below==0,)           
+names(dat7)
 summary(as.factor(dat7$Filter))
 summary(dat7$FishLength_cm_below)
-Weight_Check<-ddply(dat7, c("New_UniqueID", "Survey", "Country",
+dat7$X.1<-NULL
+dat7$X<-NULL
+dat7$ValidAphiaID.1<-NULL                 
+dat7$LWRa<-NULL
+dat7$ValidAphiaID.2<-NULL
+dat7$valid_name<-NULL
+dat7$order<-NULL
+dat7$family<-NULL
+dat7$genus<-NULL
+dat7$rank<-NULL
+dat7$LmaxFB<-NULL
+dat7$LWRa.1<-NULL
+dat7$LWRb<-NULL
+dat7$Lmin<-NULL
+dat7$Lmax1.1<-NULL                        
+dat7.1<-merge(dat7, traits, by="ValidAphiaID")
+names(dat7.1)
+summary(dat7.1$FishLength_cm_below)
+summary(dat7.1$Density_Km2)
+Weight_Check<-ddply(dat7.1, c("New_UniqueID", "Survey", "Country",
                             "Year", "estsciname", "HLNoAtLngtkm2", 
                             "FishLength_cm_below", "CatCatchWgt_per_km2", 
                             "CatIdentifier"),
                        summarise, EstimatedWeight=sum(LWRa*FishLength_cm_below^LWRb))
-write.csv(Weight_Check, "Summary_weights_lengths_10-10-2016.csv")
+write.csv(Weight_Check, "Summary_weights_lengths_15-110-2016.csv")
 summaryweight<-ddply(Weight_Check, c("New_UniqueID", "Survey", "Country",
                                      "Year", "estsciname","CatCatchWgt_per_km2",
                                      "CatIdentifier"),
@@ -3284,7 +3310,7 @@ dat7<-subset(dat6, !(dat6$Filter=="CatchWeight"&is.na(dat6$CatCatchWgt)),)
 nrow(dat6)-nrow(dat7)
 find<-subset(dat7, dat7$Filter=="CatchWeight",)
 list<-unique(as.factor(dat7$estsciname[dat7$Filter=="CatchWeight"]))
-find<-subset(dat7, dat7$Filter=="CatchWeight",)
+find<-subset(dat7, dat7$Density_Km2==0,)
 
 meancatchweight<-ddply(summaryweight1,
                        c("Survey", "Country","Year", "estsciname"),      
@@ -3297,13 +3323,16 @@ meancatchweight1<-subset(meancatchweight1, meancatchweight1$Survey%in%list,)
 
 write.csv(find, "Catch_Weight_only_11-10-2016.csv")
 write.csv(meancatchweight, "mean_catchweight-11-10-2016.csv")
-
+find<-subset(dat7, Filter=="CatchWeight",)
 # Fix Catch weights
 summary(as.factor(dat7$Filter))
 ceiling(268456.3758/283215.5222)
 1/0.017284
+summary(dat7$Density_Km2)
+dat7$Filter[dat7$Density_Km2==0]<-"CatchWeight"
+summary(as.factor(dat7$Filter))
 # Scyliorhinus canicula 2002
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/24/BT4A"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/24/BT4A"&
                dat7$estsciname=="Scyliorhinus canicula"&dat7$Filter=="CatchWeight"]<-57.85698
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/24/BT4A"&
                  dat7$estsciname=="Scyliorhinus canicula"&dat7$Filter=="CatchWeight"]<-57.85698
@@ -3314,7 +3343,7 @@ dat7$Filter[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/24/BT4A"&
 # Scyliorhinus canicula
 50447.2512769591/22478.960064874
 2/0.0475348
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2014/4/NOR/61/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2014/4/NOR/61/NCT"&
                  dat7$estsciname=="Scyliorhinus canicula"&dat7$Filter=="CatchWeight"]<-42.07444
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2014/4/NOR/61/NCT"&
                      dat7$estsciname=="Scyliorhinus canicula"&dat7$Filter=="CatchWeight"]<-42.07444
@@ -3325,7 +3354,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2014/4/NOR/61/NCT"&
 #Syngnathidae
 7619.90139/778.508066614135
 10/0.008924
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS/2015/3/END/55/BT4A"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS/2015/3/END/55/BT4A"&
                  dat7$estsciname=="Syngnathidae"&dat7$Filter=="CatchWeight"]<-1120.574
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS/2015/3/END/55/BT4A"&
                      dat7$estsciname=="Syngnathidae"&dat7$Filter=="CatchWeight"]<-1120.574
@@ -3336,7 +3365,7 @@ dat7$Filter[dat7$New_UniqueID=="BTS/2015/3/END/55/BT4A"&
 #Conger conger
 25792.7239485665/12283.83003
 2/0.0447413
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/17/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/17/NCT"&
                  dat7$estsciname=="Conger conger"&dat7$Filter=="CatchWeight"]<-44.70143
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/17/NCT"&
                      dat7$estsciname=="Conger conger"&dat7$Filter=="CatchWeight"]<-44.70143
@@ -3348,7 +3377,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/17/NCT"&
 236.7954889/117938.5798
 #1 fish ?
 1/0.067568855
-dat7$DensNsqkm[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/301/GOV"&
+dat7$Density_Km2[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/301/GOV"&
                  dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-14.79972
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/301/GOV"&
                      dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-14.79972
@@ -3360,7 +3389,7 @@ dat7$Filter[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/301/GOV"&
 1380.359397/117938.5798
 #1 fish?
 1/0.062676914
-dat7$DensNsqkm[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/260/GOV"&
+dat7$Density_Km2[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/260/GOV"&
                  dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-15.95484
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/260/GOV"&
                      dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-15.95484
@@ -3372,7 +3401,7 @@ dat7$Filter[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/260/GOV"&
 12462.61216/35414.47696
 # 1 Fish
 1/0.016048
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/8/BT4A"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/8/BT4A"&
                  dat7$estsciname=="Trisopterus luscus"&dat7$Filter=="CatchWeight"]<-62.31306
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/8/BT4A"&
                      dat7$estsciname=="Trisopterus luscus"&dat7$Filter=="CatchWeight"]<-62.31306
@@ -3383,7 +3412,7 @@ dat7$Filter[dat7$New_UniqueID=="BTS-VIIa/2002/3/COR/8/BT4A"&
 # Trisopterus luscus PT-IBTS/2013/4/NOR/47/NCT
 32710.2699295729/68232.24859
 1/0.0447413
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/47/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/47/NCT"&
                  dat7$estsciname=="Trisopterus luscus"&dat7$Filter=="CatchWeight"]<-22.35071
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/47/NCT"&
                      dat7$estsciname=="Trisopterus luscus"&dat7$Filter=="CatchWeight"]<-22.35071
@@ -3394,7 +3423,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2013/4/NOR/47/NCT"&
 # Scomber scombrus PT-IBTS/2008/3/NOR/81/NCT
 33.6845226583415/244739.3541
 1/0.0223631
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2008/3/NOR/81/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2008/3/NOR/81/NCT"&
                  dat7$estsciname=="Scomber scombrus"&dat7$Filter=="CatchWeight"]<-44.71652
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2008/3/NOR/81/NCT"&
                      dat7$estsciname=="Scomber scombrus"&dat7$Filter=="CatchWeight"]<-44.71652
@@ -3406,7 +3435,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2008/3/NOR/81/NCT"&
 # Boops boops PT-IBTS/2006/3/NOR/7/NCT
 117111.0489/76370.49092
 2/0.0503283
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/7/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/7/NCT"&
                  dat7$estsciname=="Boops boops"&dat7$Filter=="CatchWeight"]<-39.73907
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/7/NCT"&
                      dat7$estsciname=="Boops boops"&dat7$Filter=="CatchWeight"]<-39.73907
@@ -3418,7 +3447,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/7/NCT"&
 # Boops boops  PT-IBTS/2010/4/NOR/12/NCT
 29044.75283/116611.0045
 1/0.0503283
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
                  dat7$estsciname=="Boops boops"&dat7$Filter=="CatchWeight"]<-19.86954
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
                      dat7$estsciname=="Boops boops"&dat7$Filter=="CatchWeight"]<-19.86954
@@ -3430,7 +3459,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
 # Spondyliosoma cantharus  PT-IBTS/2009/4/NOR/72/NCT
 37951.14316/64202.09959
 1/0.0475348
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2009/4/NOR/72/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2009/4/NOR/72/NCT"&
                  dat7$estsciname=="Spondyliosoma cantharus"&dat7$Filter=="CatchWeight"]<-21.03722
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2009/4/NOR/72/NCT"&
                      dat7$estsciname=="Spondyliosoma cantharus"&dat7$Filter=="CatchWeight"]<-21.03722
@@ -3442,7 +3471,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2009/4/NOR/72/NCT"&
 # Spondyliosoma cantharus  PT-IBTS/2010/4/NOR/12/NCT
 82027.12036/64202.09959
 1/0.0447413
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
                  dat7$estsciname=="Spondyliosoma cantharus"&dat7$Filter=="CatchWeight"]<-22.35071
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
                      dat7$estsciname=="Spondyliosoma cantharus"&dat7$Filter=="CatchWeight"]<-22.35071
@@ -3454,7 +3483,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2010/4/NOR/12/NCT"&
 # Trachinus draco BTS-VIIa/2014/3/END/134/BT4A
 11784.7411444142/21951.93821
 1/0.01468
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS-VIIa/2014/3/END/134/BT4A"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS-VIIa/2014/3/END/134/BT4A"&
                  dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-68.11989
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS-VIIa/2014/3/END/134/BT4A"&
                      dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-68.11989
@@ -3466,7 +3495,7 @@ dat7$Filter[dat7$New_UniqueID=="BTS-VIIa/2014/3/END/134/BT4A"&
 # Trachinus draco BTS/2013/3/END/108/BT4A
 1344.430218/32855.76347
 1/0.01562
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS/2013/3/END/108/BT4A"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS/2013/3/END/108/BT4A"&
                  dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-64.02049
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS/2013/3/END/108/BT4A"&
                      dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-64.02049
@@ -3479,7 +3508,7 @@ dat7$Filter[dat7$New_UniqueID=="BTS/2013/3/END/108/BT4A"&
 5264.543301/32855.76347
 1/0.015196
 
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS/2013/3/END/25/BT4A"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS/2013/3/END/25/BT4A"&
                  dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-65.80679
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS/2013/3/END/25/BT4A"&
                      dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-65.80679
@@ -3491,7 +3520,7 @@ dat7$Filter[dat7$New_UniqueID=="BTS/2013/3/END/25/BT4A"&
 # Trachinus draco  BTS/2013/3/END/2/BT4A
 3584.743332/32855.76347
 1/0.013948
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS/2013/3/END/2/BT4A"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS/2013/3/END/2/BT4A"&
                  dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-71.69487
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS/2013/3/END/2/BT4A"&
                      dat7$estsciname=="Trachinus draco"&dat7$Filter=="CatchWeight"]<-71.69487
@@ -3503,7 +3532,7 @@ dat7$Filter[dat7$New_UniqueID=="BTS/2013/3/END/2/BT4A"&
 # Lepidopus caudatus PT-IBTS/2006/3/NOR/15/NCT
 317912.586/111309.5422
 3/0.0503283
-dat7$DensNsqkm[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/15/NCT"&
+dat7$Density_Km2[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/15/NCT"&
                  dat7$estsciname=="Lepidopus caudatus"&dat7$Filter=="CatchWeight"]<-19.86954
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/15/NCT"&
                      dat7$estsciname=="Lepidopus caudatus"&dat7$Filter=="CatchWeight"]<-19.86954
@@ -3516,7 +3545,7 @@ dat7$Filter[dat7$New_UniqueID=="PT-IBTS/2006/3/NOR/15/NCT"&
 3479.014221/3564.508492
 1/0.056164826
 
-dat7$DensNsqkm[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/249/GOV"&
+dat7$Density_Km2[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/249/GOV"&
                  dat7$estsciname=="Hippoglossoides platessoides"&dat7$Filter=="CatchWeight"]<-17.80474
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/249/GOV"&
                      dat7$estsciname=="Hippoglossoides platessoides"&dat7$Filter=="CatchWeight"]<-17.80474
@@ -3528,7 +3557,7 @@ dat7$Filter[dat7$New_UniqueID=="NS-IBTS/2011/3/JHJ/249/GOV"&
 # Limanda limanda BTS/2003/3/SOL/23/BT7
 1385289.75/2585.386748
 536/0.0263952
-dat7$DensNsqkm[dat7$New_UniqueID=="BTS/2003/3/SOL/23/BT7"&
+dat7$Density_Km2[dat7$New_UniqueID=="BTS/2003/3/SOL/23/BT7"&
                  dat7$estsciname=="Limanda limanda"&dat7$Filter=="CatchWeight"]<-20306.72
 dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="BTS/2003/3/SOL/23/BT7"&
                      dat7$estsciname=="Limanda limanda"&dat7$Filter=="CatchWeight"]<-20306.72
@@ -3536,10 +3565,224 @@ dat7$FishLength_cm_below[dat7$New_UniqueID=="BTS/2003/3/SOL/23/BT7"&
                            dat7$estsciname=="Limanda limanda"&dat7$Filter=="CatchWeight"]<-0
 dat7$Filter[dat7$New_UniqueID=="BTS/2003/3/SOL/23/BT7"&
               dat7$estsciname=="Limanda limanda"&dat7$Filter=="CatchWeight"]<-"LFD"
+
+1/0.04944979
+dat7$Density_Km2[dat7$New_UniqueID=="NIGFS/2001/4/LF/33/ROT"&
+                   dat7$estsciname=="Gobiidae"&dat7$Filter=="CatchWeight"]<-20.22253
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NIGFS/2001/4/LF/33/ROT"&
+                     dat7$estsciname=="Gobiidae"&dat7$Filter=="CatchWeight"]<-20.22253
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NIGFS/2001/4/LF/33/ROT"&
+                           dat7$estsciname=="Gobiidae"&dat7$Filter=="CatchWeight"]<-10
+dat7$Filter[dat7$New_UniqueID=="NIGFS/2001/4/LF/33/ROT"&
+              dat7$estsciname=="Gobiidae"&dat7$Filter=="CatchWeight"]<-"0K"
+1/0.04909500
+dat7$Density_Km2[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+                   dat7$estsciname=="Osmerus eperlanus"&dat7$Filter=="CatchWeight"]<-20.36867
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+                     dat7$estsciname=="Osmerus eperlanus"&dat7$Filter=="CatchWeight"]<-20.36867
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+                           dat7$estsciname=="Osmerus eperlanus"&dat7$Filter=="CatchWeight"]<-8
+dat7$Filter[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+              dat7$estsciname=="Osmerus eperlanus"&dat7$Filter=="CatchWeight"]<-"0K"
+
+dat7$Density_Km2[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+                   dat7$estsciname=="Alosa agone"&dat7$Filter=="CatchWeight"]<-20.36867
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+                     dat7$estsciname=="Alosa agone"&dat7$Filter=="CatchWeight"]<-20.36867
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+                           dat7$estsciname=="Alosa agone"&dat7$Filter=="CatchWeight"]<-8
+dat7$Filter[dat7$New_UniqueID=="NS-IBTS/2012/1/THA2/58/GOV"&
+              dat7$estsciname=="Alosa agone"&dat7$Filter=="CatchWeight"]<-"0K"
+1/0.08594431
+dat7$Density_Km2[dat7$New_UniqueID=="NIGFS/2004/1/LF/20/ROT"&
+                   dat7$estsciname=="Hippoglossoides platessoides"&dat7$Filter=="CatchWeight"]<-11.63544
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NIGFS/2004/1/LF/20/ROT"&
+                     dat7$estsciname=="Hippoglossoides platessoides"&dat7$Filter=="CatchWeight"]<-11.63544
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NIGFS/2004/1/LF/20/ROT"&
+                           dat7$estsciname=="Hippoglossoides platessoides"&dat7$Filter=="CatchWeight"]<-39
+dat7$Filter[dat7$New_UniqueID=="NIGFS/2004/1/LF/20/ROT"&
+              dat7$estsciname=="Hippoglossoides platessoides"&dat7$Filter=="CatchWeight"]<-"0K"
+
+summary(dat7$Density_Km2)
+# NIGFS/2007/1/CO/10/ROT Callionymus maculatus
+77/936.296272*100
+8/0.07590857
+dat7$Density_Km2[dat7$New_UniqueID=="NIGFS/2007/1/CO/10/ROT"&
+                   dat7$estsciname=="Callionymus maculatus"&dat7$Filter=="CatchWeight"]<-105.3899
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NIGFS/2007/1/CO/10/ROT"&
+                     dat7$estsciname=="Callionymus maculatus"&dat7$Filter=="CatchWeight"]<-105.3899
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NIGFS/2007/1/CO/10/ROT"&
+                           dat7$estsciname=="Callionymus maculatus"&dat7$Filter=="CatchWeight"]<-0
+dat7$Filter[dat7$New_UniqueID=="NIGFS/2007/1/CO/10/ROT"&
+              dat7$estsciname=="Callionymus maculatus"&dat7$Filter=="CatchWeight"]<-"LFD"
+
+
+#NIGFS/2006/4/CO/1/ROT Sprattus sprattus
+9760/678379.4712		*100
+1/0.0227783
+#		Sprattus sprattus
+dat7$Density_Km2[dat7$New_UniqueID=="NIGFS/2006/4/CO/1/ROT"&
+                   dat7$estsciname=="Sprattus sprattus"&dat7$Filter=="CatchWeight"]<-43.90143
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NIGFS/2006/4/CO/1/ROT"&
+                     dat7$estsciname=="Sprattus sprattus"&dat7$Filter=="CatchWeight"]<-43.90143
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NIGFS/2006/4/CO/1/ROT"&
+                           dat7$estsciname=="Sprattus sprattus"&dat7$Filter=="CatchWeight"]<-0
+dat7$Filter[dat7$New_UniqueID=="NIGFS/2006/4/CO/1/ROT"&
+              dat7$estsciname=="Sprattus sprattus"&dat7$Filter=="CatchWeight"]<-"LFD"
+
+#NIGFS/2003/1/LF/21/ROT Trisopterus esmarkii
+34959/172535.0079*100
+20/0.08768564
+#2003		Trisopterus esmarkii
+dat7$Density_Km2[dat7$New_UniqueID=="NIGFS/2003/1/LF/21/ROT"&
+                   dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-228.0875
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NIGFS/2003/1/LF/21/ROT"&
+                     dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-228.0875
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NIGFS/2003/1/LF/21/ROT"&
+                           dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-0
+dat7$Filter[dat7$New_UniqueID=="NIGFS/2003/1/LF/21/ROT"&
+              dat7$estsciname=="Trisopterus esmarkii"&dat7$Filter=="CatchWeight"]<-"LFD"
+#NIGFS/2003/1/LF/11/ROT Platichthys flesus
+11430/192406.4217*100
+6/0.08140275
+#2003		Platichthys flesus
+dat7$Density_Km2[dat7$New_UniqueID=="NIGFS/2003/1/LF/11/ROT"&
+                   dat7$estsciname=="Platichthys flesus"&dat7$Filter=="CatchWeight"]<-73.70758
+dat7$HLNoAtLngtkm2[dat7$New_UniqueID=="NIGFS/2003/1/LF/11/ROT"&
+                     dat7$estsciname=="Platichthys flesus"&dat7$Filter=="CatchWeight"]<-73.70758
+dat7$FishLength_cm_below[dat7$New_UniqueID=="NIGFS/2003/1/LF/11/ROT"&
+                           dat7$estsciname=="Platichthys flesus"&dat7$Filter=="CatchWeight"]<-0
+dat7$Filter[dat7$New_UniqueID=="NIGFS/2003/1/LF/11/ROT"&
+              dat7$estsciname=="Platichthys flesus"&dat7$Filter=="CatchWeight"]<-"0K"
+
+
+summary(dat7$Density_Km2)
+summary(dat7$HLNoAtLngtkm2)
+summary(dat7$HLNoAtLngt_N)
+##################################################
+# Check inconistent abundances and catch weights #
+##################################################
+summary(dat7$fish_len_est_catch_weight)
+names(dat7)
+dat7$Derived_Indiv_Fish_weight_At_Lng<-dat7$LWRa*(dat7$FishLength_cm_below^dat7$LWRb)
+summary(dat7$Derived_Indiv_Fish_weight_At_Lng)
+dat7$Derived_Indiv_Fish_weight_At_Lng[dat7$Derived_Indiv_Fish_weight_At_Lng==0]<-NA
+
+summary(dat7$Density_Km2)
+summary(dat7$TotalNoKm2)
+summary(dat7$CatCatchWgt_per_km2)
+dat7$TotalNo_km2_derived_from_weight<-dat7$CatCatchWgt_per_km2/dat7$Derived_Indiv_Fish_weight_At_Lng
+dat7$Difference_in_total_weight<-dat7$TotalNoKm2-dat7$TotalNo_km2_derived_from_weight
+dat7$Difference_in_Density_weight<-sqrt((dat7$Density_Km2-dat7$TotalNo_km2_derived_from_weight)^2)
+
+summary(dat7$TotalNo_km2_derived_from_weight)
+summary(dat7$TotalNoKm2)
+summary(dat7$Difference_in_Density_weight)
+summary(dat7$Difference_in_total_weight)
+
+boxplot(dat7$Difference_in_total_weight~dat7$Survey)
+
+ggplot(dat7, aes(x=CatCatchWgt_per_km2, y=TotalNo_km2_derived_from_weight, colour=Survey))+
+  geom_jitter()
+
+ggplot(dat7, aes(x=TotalNoKm2, y=TotalNo_km2_derived_from_weight, colour=Survey))+
+  geom_jitter()
+
+
+find<-subset(dat7, dat7$Difference_in_total_weight>1000000,)
+summary(as.factor(find$Survey))
+########
+find<-subset(dat7, Density_Km2==0,)
+find<-subset(dat7, dat7$HLNoAtLngtkm2>dat7$TotalNoKm2)
+summary(dat7$Density_Km2)
+#summary(dat7$Density_Km21)
+#Weight_Check<-ddply(dat7, c("New_UniqueID", "Survey", "Country",
+#                            "Year", "estsciname", "Density_Km21", 
+##                            "FishLength_cm_below", "CatCatchWgt_per_km2", 
+#                            "CatIdentifier"),
+#                    summarise, EstimatedWeight=sum(LWRa*FishLength_cm_below^LWRb))
+#write.csv(Weight_Check, "Summary_weights_lengths_10-10-2016.csv")
+#summaryweight<-ddply(Weight_Check, c("New_UniqueID", "Survey", "Country",
+#                                     "Year", "estsciname","CatCatchWgt_per_km2",
+#                                     "CatIdentifier"),
+#                     summarise, 
+#                     EstimatedCatchWeight=sum(as.numeric(EstimatedWeight*Density_Km21)))
+#summaryweight1<-ddply(summaryweight, c("New_UniqueID", "Survey", "Country",
+#                                       "Year", "estsciname","EstimatedCatchWeight"),      
+#                      summarise, AggCatCatchWgt_per_km2=sum(CatCatchWgt_per_km2))
+
+#write.csv(summaryweight, "Summary_Fish_CatchWeight_corrections1.csv")
+#write.csv(summaryweight1, "Summary1_Fish_CatchWeight_corrections1.csv")
+#summary(summaryweight1$AggCatCatchWgt_per_km2)
+#summaryweight1<-subset(summaryweight1, !is.na(AggCatCatchWgt_per_km2),)
+#summaryweight1<-subset(summaryweight1, !(AggCatCatchWgt_per_km2==0),)
+#summaryweight1<-subset(summaryweight1, !is.na(EstimatedCatchWeight),)
+#summaryweight1<-subset(summaryweight1, !(EstimatedCatchWeight==0),)
+#plot(summaryweight1$CatCatchWgt_per_km2, summaryweight1$EstimatedCatchWeight, pch=19)
+
+#for (cat in unique(summaryweight1$estsciname)){
+  mypath <- file.path(paste("C1_Weight_Check_", cat, ".jpeg", sep = ""))
+  jpeg(file=mypath)
+  d <- subset(summaryweight1, estsciname == cat)
+  plot(d$AggCatCatchWgt_per_km2, d$EstimatedCatchWeight, 
+       main=unique(d$estsciname), pch=19, xlab="Recorded Catch Weight (g/Km2)", 
+       ylab="Estimated Catch Weight (g/Km2)")
+  abline(0,1, col="red")
+  abline(0,0.75, col='red', lty=2)
+  abline(0,1.25, col='red', lty=2)
+  dev.off()
+}
+
+# Plot Summed Densities at lenght against reported Catch weight
+#Weight_Check1<-ddply(dat7, c("New_UniqueID", "Survey", "Country",
+#                             "Year", "estsciname", "CatCatchWgt_per_km2", 
+#                             "TotalNoKm2", "CatIdentifier" ),
+#                     summarise, SummedHLNoLng=sum(Density_Km21))
+
+#Weight_Check2<-ddply(Weight_Check1, c("New_UniqueID", "Survey", "Country",
+ #                                     "Year", "estsciname",  
+ #                                     "TotalNoKm2", "SummedHLNoLng" ),
+ #                    summarise, SummedCatCatchWgt=sum(CatCatchWgt_per_km2))
+
+#Weight_Check1<-subset(Weight_Check1, !is.na(CatCatchWgt_per_km2),)
+#Weight_Check1<-subset(Weight_Check1, !(CatCatchWgt_per_km2==0),)
+#Weight_Check1<-subset(Weight_Check1, !is.na(SummedHLNoLng),)
+#Weight_Check1<-subset(Weight_Check1, !(SummedHLNoLng==0),)
+
+#write.csv(Weight_Check1, "Weight_Density_Checks_c1.csv")
+
+#plot(Weight_Check1$CatCatchWgt_per_km2, Weight_Check1$SummedHLNoLng)
+#summary(as.factor(Weight_Check1$Survey))
+
+#for (cat in unique(Weight_Check2$estsciname)){
+  mypath <- file.path(paste("C1_Density_at_Weight_Check_", cat, ".jpeg", sep = ""))
+  jpeg(file=mypath)
+  d <- subset(Weight_Check2, estsciname == cat)
+  plot(d$SummedCatCatchWgt, d$SummedHLNoLng, 
+       main=unique(d$estsciname), pch=19, xlab="Recorded Catch Weight (g/Km2)", 
+       ylab="Density (no/km2)")
+  dev.off()
+}
+
+# plot Lenght frequency distributions per species per counrty per year.
+for (cat in unique(dat7$estsciname)){
+  mypath <- file.path(paste("C2_Length_Frequency_", cat, ".jpeg", sep = ""))
+  jpeg(file=mypath)
+  d <- subset(dat7, estsciname == cat)
+  plot(d$FishLength_cm_below, d$Density_Km22, 
+       main=unique(d$estsciname), pch=19, xlab="Length (cm)", 
+       ylab="Density at Lenght (km2)")
+  dev.off()
+}
+
+#summary(dat7$Density_Km21)
+#dat7$Density_Km22<-dat7$Density_Km21
+#dat7$Density_Km22[dat7$Density_Km21==0]<-dat7$HLNoAtLngtkm2[dat7$Density_Km21==0]
+#summary(dat7$Density_Km22)
 ################
 # Check Filter #
 ################
-summary(dat6$DensNsqkm)
+summary(dat7$Density_Km2)
 
 summary(as.factor(dat7$estrank))
 list<-c("Species", "Subspecies")
@@ -3567,9 +3810,63 @@ summary(as.factor(dat7$estsciname[dat7$Filter=="LFD"]))
 ####################################
 smallfish<-subset(dat7, FishLength_cm_below<3&!FishLength_cm_below==0,)
 summary(smallfish$FishLength_cm_below)
+summary(dat7$FishLength_cm_below)
+summary(dat7$HLNoAtLngt_N)
+names(dat7)
+summary(dat7$TotalNo_N)
+summary(dat7$HLNoAtLngtkm2)
+summary(dat7$TotalNoKm2)
 write.csv(smallfish, "Small_fish_removed_from_DP_12-10-2016.csv")
-dat8<-subset(dat8, FishLength_cm_below>2|FishLength_cm_below==0,)
+dat8<-subset(dat7, FishLength_cm_below>2|FishLength_cm_below==0,)
+dat8$LmaxFB
+
+test1<-dat8[which(dat8$FishLength_cm_below > dat8$LmaxFB*1.1),]
+# 1962 observations 
+
+test2<-dat8[which(dat8$FishLength_cm_below > dat8$LmaxFB*1.4),]
 summary(as.factor(dat8$FishLength_cm_below[dat8$estsciname=="Lepadogaster lepadogaster"]))
 
-write.csv(dat8, "dat8_HL_12-10-2016.csv")
+write.csv(dat8, "dat8_HL_16-11-2016.csv")
 
+dat8<-read.csv("dat8_HL_08-11-2016.csv")
+memory.size(10000000000000)
+names(dat8)
+summary(dat8$FishLength_cm_below)
+summary(dat8$HLNoAtLngt_N)
+names(dat8)
+
+dat8$X.1<-NULL
+dat8$X<-NULL                            
+dat8$ValidAphiaID.1<-NULL
+dat8$LWRa<-NULL                            
+dat8$ValidAphiaID.2<-NULL                  
+dat8$valid_name<-NULL
+dat8$order<-NULL                         
+dat8$family<-NULL
+dat8$genus<-NULL                           
+dat8$rank<-NULL
+dat8$LmaxFB<-NULL                          
+dat8$LWRa.1<-NULL
+dat8$LWRb<-NULL                          
+dat8$Lmin<-NULL
+dat8$Lmax1.1<-NULL                        
+summary(as.factor(dat8$estsciname))
+names(traits)
+traits$estsciname<-traits$valid_name
+dat8_1<-merge(dat8,traits, by="estsciname")
+nrow(dat8)-nrow(dat8_1)
+dat8_1$LmaxFB[dat8_1$valid_name=="Torpedo nobiliana"]<-180
+dat8_1$LmaxFB[dat8_1$valid_name=="Urophycis chuss"]<-66
+dat8_1$LmaxFB[dat8_1$valid_name=="Howella sherborni"]<-8
+
+test1<-dat8_1[which(dat8_1$FishLength_cm_below > dat8_1$LmaxFB*1.1),]
+# 1962 observations 
+
+dat8_1$estsciname[dat8_1$estsciname=="Callionymus risso"&dat8_1$FishLength_cm_below>15]<-"Callionymus"
+dat8_1$estrank[dat8_1$estsciname=="Callionymus"]<-"Genus"
+dat8_1$LmaxFB[dat8_1$estsciname=="Callionymus"]<-30
+
+test2<-dat8_1[which(dat8_1$FishLength_cm_below > dat8_1$LmaxFB*1.4),]
+dat8_1$FishLength_cm_below[dat8_1$FishLength_cm_below > dat8_1$LmaxFB*1.4]<-0
+diff<-test2$newLngtClass-test2$FishLength_cm_below
+summary(dat8_1$FishLength_cm_below[dat8_1$estsciname=="Limanda limanda"])
